@@ -74,10 +74,10 @@ public struct Rectangle {
     * var rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
     */
     public init (fromDegreesWest west: Double, south: Double, east: Double, north: Double) {
-        self.west = Math.toRadians(west)
-        self.south = Math.toRadians(south)
-        self.east = Math.toRadians(east)
-        self.north = Math.toRadians(north)
+        self.west = Math.toRadians(degrees: west)
+        self.south = Math.toRadians(degrees: south)
+        self.east = Math.toRadians(degrees: east)
+        self.north = Math.toRadians(degrees: north)
     }
     
     
@@ -385,7 +385,7 @@ public struct Rectangle {
     * @param {Cartographic} cartographic The cartographic to test.
     * @returns {Boolean} true if the provided cartographic is inside the rectangle, false otherwise.
     */
-    func contains(cartographic: Cartographic) -> Bool {
+    func contains(_ cartographic: Cartographic) -> Bool {
         var longitude = cartographic.longitude
         let latitude = cartographic.latitude
         
@@ -414,7 +414,7 @@ public struct Rectangle {
     * @param {Cartesian3[]} [result] The array of Cartesians onto which to store the result.
     * @returns {Cartesian3[]} The modified result parameter or a new Array of Cartesians instances if none was provided.
     */
-    func subsample(ellipsoid: Ellipsoid = Ellipsoid.wgs84(), surfaceHeight: Double = 0.0) -> [Cartesian3] {
+    func subsample(_ ellipsoid: Ellipsoid = Ellipsoid.wgs84(), surfaceHeight: Double = 0.0) -> [Cartesian3] {
         
         var result = [Cartesian3]()
         
@@ -425,13 +425,13 @@ public struct Rectangle {
         lla.latitude = north
         result.append(ellipsoid.cartographicToCartesian(lla))
         
-        lla.longitude = east;
+        lla.longitude = east
         result.append(ellipsoid.cartographicToCartesian(lla))
         
-        lla.latitude = south;
+        lla.latitude = south
         result.append(ellipsoid.cartographicToCartesian(lla))
         
-        lla.longitude = west;
+        lla.longitude = west
         result.append(ellipsoid.cartographicToCartesian(lla))
         
         if (north < 0.0) {
@@ -483,7 +483,7 @@ extension Rectangle: Packable {
     
     init(array: [Double], startingIndex: Int = 0) {
         self.init()
-        assert(checkPackedArrayLength(array, startingIndex: startingIndex), "Invalid packed array length")
+        assert(checkPackedArrayLength(array: array, startingIndex: startingIndex), "Invalid packed array length")
         array.withUnsafeBufferPointer { (pointer: UnsafeBufferPointer<Double>) in
             memcpy(&self, pointer.baseAddress, Rectangle.packedLength() * strideof(Double))
         }

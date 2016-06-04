@@ -29,8 +29,8 @@ extension String {
     }
     
     func indexOf(findStr:String, startIndex: String.Index? = nil) -> String.Index? {
-        let range = (self as! NSString).range(findStr, options: [], range: NSRange(location: 0, length: (self as! NSString).length), locale: nil)
-        return self.index(startIndex, offsetBy: range.lowerBound)
+        let range = (self as! NSString).range(of: findStr, options: [], range: NSRange(location: 0, length: (self as! NSString).length), locale: nil)
+        return self.index(startIndex ?? self.startIndex, offsetBy: range.location)
     }
     
 }
@@ -69,7 +69,7 @@ extension String {
         }
         do {
             let data = try NSData(contentsOf: sourceURL, options: [])
-            return CGImage.fromData(data: data)
+            return CGImage.from(data: data)
         } catch {
             return nil
         }

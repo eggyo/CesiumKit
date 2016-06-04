@@ -288,18 +288,18 @@ public class Uniform {
     static func create(desc desc: GLSLShaderVariableDescription, type: UniformType) -> Uniform {
         
         switch desc.type {
-        case .Float:
-            let dataType = inferDataTypeFromGLSLDescription(desc)
+        case .float:
+            let dataType = inferDataTypeFromGLSLDescription(desc: desc)
             return Uniform(desc: desc, type: type, dataType: dataType)
             /*case Int // kGlslTypeInt,
             return UniformFloat(variableDescription: variableDescription)
             case Bool // kGlslTypeBool,
             return UniformBool(variableDescription: variableDescription)*/
-        case .Tex2D: // kGlslTypeTex2D,
+        case .tex2D: // kGlslTypeTex2D,
             return UniformSampler(desc: desc, type: type, dataType: .Sampler2D)
         //case .Tex3D: // kGlslTypeTex3D,
           //  return UniformSampler(desc: desc, type: type, dataType: .Sampler3D)
-        case .TexCube: // kGlslTypeTexCube,
+        case .texCube: // kGlslTypeTexCube,
             return UniformSampler(desc: desc, type: type, dataType: .SamplerCube)
         default:
             assertionFailure("Unimplemented")
@@ -312,21 +312,21 @@ public class Uniform {
         if desc.matSize == 1 { //vector
             switch desc.vecSize {
             case 1:
-                if desc.type == .Float { return .FloatVec1 }
-                if desc.type == .Int { return .IntVec1 }
-                if desc.type == .Bool { return .BoolVec1 }
+                if desc.type == .float { return .FloatVec1 }
+                if desc.type == .int { return .IntVec1 }
+                if desc.type == .bool { return .BoolVec1 }
             case 2:
-                if desc.type == .Float { return .FloatVec2 }
-                if desc.type == .Int { return .IntVec2 }
-                if desc.type == .Bool { return .BoolVec2 }
+                if desc.type == .float { return .FloatVec2 }
+                if desc.type == .int { return .IntVec2 }
+                if desc.type == .bool { return .BoolVec2 }
             case 3:
-                if desc.type == .Float { return .FloatVec3 }
-                if desc.type == .Int { return .IntVec3 }
-                if desc.type == .Bool { return .BoolVec3 }
+                if desc.type == .float { return .FloatVec3 }
+                if desc.type == .int { return .IntVec3 }
+                if desc.type == .bool { return .BoolVec3 }
             case 4:
-                if desc.type == .Float { return .FloatVec4 }
-                if desc.type == .Int { return .IntVec4 }
-                if desc.type == .Bool { return .BoolVec4 }
+                if desc.type == .float { return .FloatVec4 }
+                if desc.type == .int { return .IntVec4 }
+                if desc.type == .bool { return .BoolVec4 }
             default:
                 assertionFailure("unknown uniform type")
             }
@@ -334,7 +334,7 @@ public class Uniform {
         if desc.matSize == 2 { //Matrix2
             switch desc.vecSize {
             case 2:
-                if desc.type == .Float { return .FloatMatrix2 }
+                if desc.type == .float { return .FloatMatrix2 }
             default:
                 assertionFailure("unknown uniform type")
             }
@@ -342,7 +342,7 @@ public class Uniform {
         if desc.matSize == 3 { // Matrix3
             switch desc.vecSize {
             case 3:
-                if desc.type == .Float { return .FloatMatrix3 }
+                if desc.type == .float { return .FloatMatrix3 }
             default:
                 assertionFailure("unknown uniform type")
             }
@@ -350,7 +350,7 @@ public class Uniform {
         if desc.matSize == 4 { // Matrix4
             switch desc.vecSize {
             case 4:
-                if desc.type == .Float { return .FloatMatrix4 }
+                if desc.type == .float { return .FloatMatrix4 }
 
             default:
                 assertionFailure("unknown uniform type")

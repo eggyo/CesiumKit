@@ -23,14 +23,14 @@ extension NSDate {
      
      - parameter date: UTC date to calculate offset for.
     */
-    class func taiOffsetForDate (date: NSDate? = nil) -> NSTimeInterval {
+    class func taiOffsetFor (date: NSDate? = nil) -> NSTimeInterval {
         
         let taiDate = date ?? NSDate()
         
         var taiOffset = 0
     
         for leapSecond in _leapSeconds {
-            if leapSecond.date.compare(taiDate) == .OrderedAscending {
+            if leapSecond.date.compare(taiDate) == .orderedAscending {
                 taiOffset = leapSecond.offset
             } else {
                 break
@@ -47,14 +47,14 @@ extension NSDate {
      Returns an NSDate using [TAI](https://en.wikipedia.org/wiki/International_Atomic_Time) for a date in UTC.
     */
     func taiOffsetDateForUTCDate() -> NSDate {
-        return self.dateByAddingTimeInterval(NSDate.taiOffsetForDate(self))
+        return self.addingTimeInterval(NSDate.taiOffsetFor(date: self))
     }
     
     /**
      Creates an NSDate using UTC for a date in TAI.
      */
     func utcDateForTAIOffsetDate() -> NSDate {
-        return self.dateByAddingTimeInterval(-NSDate.taiOffsetForDate(self))
+        return self.addingTimeInterval(-NSDate.taiOffsetFor(date: self))
     }
 
     /**
@@ -71,7 +71,7 @@ extension NSDate {
         // Astronomical Almanac (Seidelmann 1992).
         
         let calendar = _gregorianGMTCalendar
-        let dateComponents = calendar.components([.Year, .Month, .Day, .Hour, .Minute, .Second, .Nanosecond], fromDate: self)
+        let dateComponents = calendar.components([.year, .month, .day, .hour, .minute, .second, .nanosecond], from: self)
         
         let a = ((dateComponents.month - 14) / 12) | 0
         let b = dateComponents.year + 4800 + a
@@ -99,8 +99,8 @@ extension NSDate {
      
      - returns: An NSDate object from the provided string or nil if the conversion failed.
      */
-    class func fromUTCISO8601String (isoDate: String) -> NSDate? {
-        return _iso8601Formatter.dateFromString(isoDate)
+    class func fromUTCISO8601String (_ isoDate: String) -> NSDate? {
+        return _iso8601Formatter.date(from: isoDate)
     }
     
     private static let _leapSeconds: [(date: NSDate, offset: Int)] = [

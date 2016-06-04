@@ -33,7 +33,7 @@ struct BlendingState: Equatable, CustomStringConvertible {
     * @type {Object}
     * @constant
     */
-    static func Disabled() -> BlendingState {
+    static func disabled() -> BlendingState {
         return BlendingState(enabled: false,
             equationRgb: .Add,
             equationAlpha: .Add,
@@ -50,7 +50,7 @@ struct BlendingState: Equatable, CustomStringConvertible {
     * @type {Object}
     * @constant
     */
-    static func AlphaBlend() -> BlendingState {
+    static func alphaBlend() -> BlendingState {
         return BlendingState(enabled: true,
             equationRgb : .Add,
             equationAlpha : .Add,
@@ -61,7 +61,7 @@ struct BlendingState: Equatable, CustomStringConvertible {
             color: nil)
     }
     
-    static func AlphaBlend(color: Cartesian4) -> BlendingState {
+    static func alphaBlend(color: Cartesian4) -> BlendingState {
         return BlendingState(enabled: true,
             equationRgb : .Add,
             equationAlpha : .Add,
@@ -78,7 +78,7 @@ struct BlendingState: Equatable, CustomStringConvertible {
     * @type {Object}
     * @constant
     */
-    static func PremultipliedAlphaBlend(color: Cartesian4) -> BlendingState {
+    static func premultipliedAlphaBlend(color: Cartesian4) -> BlendingState {
         return BlendingState(enabled : true,
             equationRgb : .Add,
             equationAlpha : .Add,
@@ -95,7 +95,7 @@ struct BlendingState: Equatable, CustomStringConvertible {
     * @type {Object}
     * @constant
     */
-    static func AdditiveBlend(color: Cartesian4) -> BlendingState {
+    static func additiveBlend(color: Cartesian4) -> BlendingState {
         return BlendingState(enabled : true,
             equationRgb : .Add,
             equationAlpha : .Add,

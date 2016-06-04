@@ -71,7 +71,7 @@ class AttributeCompression {
      *
      * @see AttributeCompression.octEncode
      */
-    class func octDecode (x x: UInt8, y: UInt8) -> Cartesian3 {
+    class func octDecode (x: UInt8, y: UInt8) -> Cartesian3 {
         
         assert(x >= 0 && x <= 255 && y >= 0 && y <= 255, "x and y must be a signed normalized integer between 0 and 255")
         
@@ -233,7 +233,7 @@ AttributeCompression.octDecode(x, y, v3);
 *
 * @exception {DeveloperError} textureCoordinates is required.
 */
-    static func compressTextureCoordinates (textureCoordinates: Cartesian2) -> Float {
+    static func compress (textureCoordinates: Cartesian2) -> Float {
         
         let x = textureCoordinates.x == 1.0 ? 4095.0 : floor(textureCoordinates.x * 4096.0)
         let y = textureCoordinates.y == 1.0 ? 4095.0 : floor(textureCoordinates.y * 4096.0)
@@ -250,8 +250,8 @@ AttributeCompression.octDecode(x, y, v3);
      * @exception {DeveloperError} compressed is required.
      * @exception {DeveloperError} result is required.
      */
-    static func decompressTextureCoordinates(compressed: Float) -> Cartesian2 {
-        let temp = Double(compressed) / 4096.0
+    static func decompress (textureCoordinates: Float) -> Cartesian2 {
+        let temp = Double(textureCoordinates) / 4096.0
         return Cartesian2(
             x: floor(temp) / 4096.0,
             y: temp - floor(temp)

@@ -198,23 +198,23 @@ class QuantizedMeshTerrainData: TerrainData {
             return Int(self._uValues[startIndex + a]) - Int(self._uValues[startIndex + b]) <= 0
         }
         
-        _westIndices = sortIndicesIfNecessary(westIndices, sortFunction: sortByV, vertexCount: vertexCount)
-        _southIndices = sortIndicesIfNecessary(southIndices, sortFunction: sortByU, vertexCount: vertexCount)
-        _eastIndices = sortIndicesIfNecessary(eastIndices, sortFunction: sortByV, vertexCount: vertexCount)
-        _northIndices = sortIndicesIfNecessary(northIndices, sortFunction: sortByU, vertexCount: vertexCount)
+        _westIndices = sortIndicesIfNecessary(indices: westIndices, sortFunction: sortByV, vertexCount: vertexCount)
+        _southIndices = sortIndicesIfNecessary(indices: southIndices, sortFunction: sortByU, vertexCount: vertexCount)
+        _eastIndices = sortIndicesIfNecessary(indices: eastIndices, sortFunction: sortByV, vertexCount: vertexCount)
+        _northIndices = sortIndicesIfNecessary(indices: northIndices, sortFunction: sortByU, vertexCount: vertexCount)
     }
     
     func sortIndicesIfNecessary(indices: [Int], sortFunction: (a: Int, b: Int) -> Bool, vertexCount: Int) -> [Int] {
 
         var needsSort = false
-        for (i, index) in indices.enumerate() {
+        for (i, index) in indices.enumerated() {
             needsSort = needsSort || (i > 0 && !sortFunction(a: indices[i - 1], b: index))
             if needsSort {
                 break
             }
         }
         if needsSort {
-            return indices.sort(sortFunction)
+            return indices.sorted(isOrderedBefore: sortFunction)
         }
         return indices
     }
@@ -391,26 +391,26 @@ class QuantizedMeshTerrainData: TerrainData {
 
         guard let mesh = _mesh else {
             assertionFailure("mesh should exist")
-            return Double.NaN
+            return Double.nan
         }
         let vertices = mesh.vertices
         let encoding = mesh.encoding
         let indices = mesh.indices
         
-        for i in 0.stride(to: indices.count, by: 3) {
+        for i in stride(from: 0, to: indices.count, by: 3) {
             let i0 = indices[i]
             let i1 = indices[i + 1]
             let i2 = indices[i + 2]
             
-            let uv0 = encoding.decodeTextureCoordinates(vertices, index: i0)
-            let uv1 = encoding.decodeTextureCoordinates(vertices, index: i1)
-            let uv2 = encoding.decodeTextureCoordinates(vertices, index: i2)
+            let uv0 = encoding.decodeTextureCoordinates(buffer: vertices, index: i0)
+            let uv1 = encoding.decodeTextureCoordinates(buffer: vertices, index: i1)
+            let uv2 = encoding.decodeTextureCoordinates(buffer: vertices, index: i2)
             
             let barycentric = Intersections2D.computeBarycentricCoordinates(x: u, y: v, x1: uv0.x, y1: uv0.y, x2: uv1.x, y2: uv1.y, x3: uv2.x, y3: uv2.y)
             if barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15 {
-                let h0 = encoding.decodeHeight(vertices, index: i0)
-                let h1 = encoding.decodeHeight(vertices, index: i1)
-                let h2 = encoding.decodeHeight(vertices, index: i2)
+                let h0 = encoding.decodeHeight(buffer: vertices, index: i0)
+                let h1 = encoding.decodeHeight(buffer: vertices, index: i1)
+                let h2 = encoding.decodeHeight(buffer: vertices, index: i2)
                 return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2
             }
         }
@@ -420,7 +420,7 @@ class QuantizedMeshTerrainData: TerrainData {
     
     private func interpolateHeight (u u: Double, v: Double) -> Double? {
 
-        for i in 0.stride(to: _indices.count, by: 3) {
+        for i in stride(from: 0, to: _indices.count, by: 3) {
             let i0 = _indices[i]
             let i1 = _indices[i + 1]
             let i2 = _indices[i + 2]

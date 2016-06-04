@@ -1060,7 +1060,7 @@ public class Material {
     func createUniforms () {
         if let uniforms = _template?.fabric.uniformMap.uniformDescriptors {
             for uniform in uniforms {
-                createUniform(uniform)
+                createUniform(descriptor: uniform)
             }
         }
     }
@@ -1101,7 +1101,7 @@ public class Material {
         
         let newUniformId = uniformId + "_" + "\(_count)"
         
-        if replaceToken(uniformId, newToken: newUniformId) == 1 && _strict {
+        if replaceToken(token: uniformId, newToken: newUniformId) == 1 && _strict {
             assertionFailure("strict: shader source does not use uniform \'" + uniformId + "'.")
         }
         _count += 1

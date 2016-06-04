@@ -39,7 +39,7 @@ class IntersectionTests {
         if t < 0 {
             return nil
         }
-        return origin.add(direction.multiplyByScalar(t))
+        return origin.add(direction.multiply(scalar: t))
     }
 
     static private func _rayTriangle (ray: Ray, p0: Cartesian3, p1: Cartesian3, p2: Cartesian3, cullBackFaces: Bool = false) -> Double? {
@@ -120,7 +120,7 @@ class IntersectionTests {
         if t == nil || t < 0.0 {
             return nil
         }
-        return ray.origin.add(ray.direction.multiplyByScalar(t!))
+        return ray.origin.add(ray.direction.multiply(scalar: t!))
     }
     
 /*

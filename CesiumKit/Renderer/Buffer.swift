@@ -31,24 +31,24 @@ class Buffer {
      Creates a Metal GPU buffer. If an allocated memory region is passed in, it will be
      copied to the buffer and can be released (or automatically released via ARC). 
     */
-    init (device: MTLDevice, array: UnsafePointer<Void> = nil, componentDatatype: ComponentDatatype, sizeInBytes: Int, label: String? = nil) {
+    init (device: MTLDevice, array: UnsafePointer<Void>? = nil, componentDatatype: ComponentDatatype, sizeInBytes: Int, label: String? = nil) {
         assert(sizeInBytes > 0, "bufferSize must be greater than zero")
         
         length = sizeInBytes
         self.componentDatatype = componentDatatype
         _entireRange = NSMakeRange(0, length)
         
-        if array != nil {
+        if let array = array {
             #if os(OSX)
-                metalBuffer = device.newBufferWithBytes(array, length: length, options: .StorageModeManaged)
+                metalBuffer = device.newBuffer(withBytes: array, length: length, options: .storageModeManaged)
             #elseif os(iOS)
-                metalBuffer = device.newBufferWithBytes(array, length: length, options: .StorageModeShared)
+                metalBuffer = device.newBufferWithBytes(array, length: length, options: .storageModeShared)
             #endif
         } else {
             #if os(OSX)
-                metalBuffer = device.newBufferWithLength(length, options: .StorageModeManaged)
+                metalBuffer = device.newBuffer(withLength: length, options: .storageModeManaged)
             #elseif os(iOS)
-                metalBuffer = device.newBufferWithLength(length, options: .StorageModeShared)
+                metalBuffer = device.newBufferWithLength(length, options: .storageModeShared)
             #endif
         }
         if let label = label {
@@ -56,7 +56,7 @@ class Buffer {
         }
     }
     
-    func copyFromArray (array: UnsafePointer<Void>, length arrayLength: Int, offset: Int = 0) {
+    func copyFrom (array: UnsafePointer<Void>, length arrayLength: Int, offset: Int = 0) {
         assert(offset + arrayLength <= length, "This buffer is not large enough")
         
         memcpy(data, array+offset, arrayLength)

@@ -478,7 +478,7 @@ CesiumMath.convertLongitudeRange = function(angle) {
     * @param {Number} n The divisor.
     * @returns {Number} The remainder.
     */
-    static func mod (m: Double, _ n: Double) -> Double {
+    static func mod (_ m: Double, _ n: Double) -> Double {
         return fmod(fmod(m, n) + n, n)
     }
 
@@ -576,7 +576,7 @@ CesiumMath.factorial = function(n) {
 * var t = Cesium.Math.isPowerOfTwo(16); // true
 * var f = Cesium.Math.isPowerOfTwo(20); // false
 */
-    static func isPowerOfTwo(n: Int) -> Bool {
+    static func isPowerOfTwo(_ n: Int) -> Bool {
         return n > 0 && n & (n - 1) == 0
 }
 /*
@@ -661,7 +661,7 @@ CesiumMath.nextRandomNumber = function() {
     * @param {Number} value The value for which to compute acos.
     * @returns {Number} The acos of the value if the value is in the range [-1.0, 1.0], or the acos of -1.0 or 1.0,
     */
-    static func acosClamped(value: Double) -> Double {
+    static func acosClamped(_ value: Double) -> Double {
         return acos(clamp(value, min: -1.0, max: 1.0))
     }
 
@@ -672,7 +672,7 @@ CesiumMath.nextRandomNumber = function() {
     * @param {Number} value The value for which to compute asin.
     * @returns {Number} The asin of the value if the value is in the range [-1.0, 1.0], or the asin of -1.0 or 1.0,
     */
-    static func asinClamped (value: Double) -> Double {
+    static func asinClamped (_ value: Double) -> Double {
         return asin(clamp(value, min: -1.0, max: 1.0))
     }
     
@@ -720,11 +720,11 @@ return 2.0 * radius * Math.sin(angle * 0.5);
 public extension Double {
     
     var wholeComponent: Double {
-        return self - (self % 1.0)
+        return self - self.truncatingRemainder(dividingBy: 1.0)
     }
     
     var fractionalComponent: Double {
-        return self % 1.0
+        return self.truncatingRemainder(dividingBy: 1.0)
     }
     
     // Given a value to round and a factor to round to,

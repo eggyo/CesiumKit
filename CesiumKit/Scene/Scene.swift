@@ -700,7 +700,7 @@ public class Scene {
         
         self.mapProjection = projection
         
-        id = NSUUID().UUIDString
+        id = NSUUID().uuidString
             
         frameState = FrameState()
         frameState.context = context/*new CreditDisplay(creditContainer*/
@@ -760,7 +760,7 @@ public class Scene {
         updateFrustums(near: near, far: far, farToNearRatio: farToNearRatio, numFrustums: numFrustums)
         
         // give frameState, camera, and screen space camera controller initial state before rendering
-        updateFrameState(0, time: JulianDate.now())
+        updateFrameState(frameNumber: 0, time: JulianDate.now())
         initializeFrame()
     }
 
@@ -774,13 +774,13 @@ public class Scene {
 
     func cameraEqual(camera0: Camera, camera1: Camera, epsilon: Double) -> Bool {
         let scalar = 1 / max(1, maxComponent(a: camera0.position, b: camera1.position))
-        let position0 = camera0.position.multiplyByScalar(scalar)
-        let position1 = camera1.position.multiplyByScalar(scalar)
+        let position0 = camera0.position.multiply(scalar: scalar)
+        let position1 = camera1.position.multiply(scalar: scalar)
         return position0.equalsEpsilon(position1, relativeEpsilon: epsilon, absoluteEpsilon: epsilon) &&
             camera0.direction.equalsEpsilon(camera1.direction, relativeEpsilon: epsilon, absoluteEpsilon: epsilon) &&
             camera0.up.equalsEpsilon(camera1.up, relativeEpsilon: epsilon, absoluteEpsilon: epsilon) &&
             camera0.right.equalsEpsilon(camera1.right, relativeEpsilon: epsilon, absoluteEpsilon: epsilon) &&
-            camera0.transform.equalsEpsilon(camera1.transform, epsilon: epsilon)
+            camera0.transform.equalsEpsilon(other: camera1.transform, epsilon: epsilon)
     }
 
 
@@ -814,7 +814,7 @@ public class Scene {
         frameState.occluder = getOccluder()
         frameState.terrainExaggeration = _terrainExaggeration
 
-        clearPasses(&frameState.passes)
+        clearPasses(passes: &frameState.passes)
     }
     
     func updateFrustums(near near: Double, far: Double, farToNearRatio: Double, numFrustums: Int) {
@@ -836,10 +836,10 @@ public class Scene {
         if _frustumCommandsList.count > numFrustums {
             for i in numFrustums..<_frustumCommandsList.count {
                 let frustumCommands = _frustumCommandsList[i]
-                context.returnFrustumUniformBufferProvider(frustumCommands.opaqueUniformBufferProvider)
-                context.returnFrustumUniformBufferProvider(frustumCommands.transparentUniformBufferProvider)
+                context.returnFrustumUniformBufferProvider(provider: frustumCommands.opaqueUniformBufferProvider)
+                context.returnFrustumUniformBufferProvider(provider: frustumCommands.transparentUniformBufferProvider)
             }
-            _frustumCommandsList.removeRange(Range(numFrustums..<_frustumCommandsList.count))
+            _frustumCommandsList.removeSubrange(Range(numFrustums..<_frustumCommandsList.count))
         }
     }
 
@@ -893,8 +893,8 @@ public class Scene {
             return false
         }
         return
-            cullingVolume!.visibility(boundingVolume) != .Outside &&
-                (occluder == nil || !boundingVolume.isOccluded(occluder!))
+            cullingVolume!.visibility(boundingVolume: boundingVolume) != .Outside &&
+                (occluder == nil || !boundingVolume.isOccluded(occluder: occluder!))
     }
     
     func createPotentiallyVisibleSet() {
@@ -949,10 +949,10 @@ public class Scene {
             } else {
                 let command = command as! DrawCommand
                 if let boundingVolume = command.boundingVolume {
-                    if !isVisible(command, cullingVolume: cullingVolume, occluder: occluder) {
+                    if !isVisible(command: command, cullingVolume: cullingVolume, occluder: occluder) {
                             continue
                     }
-                    distances = boundingVolume.computePlaneDistances(position, direction: direction)
+                    distances = boundingVolume.computePlaneDistances(position: position, direction: direction)
                     near = min(near, distances.start)
                     far = max(far, distances.stop)
                 } else {
@@ -964,7 +964,7 @@ public class Scene {
                     undefBV = true//!(command is ClearCommand)
                 }
                 
-                insertIntoBin(command, distance: distances)
+                insertIntoBin(command: command, distance: distances)
             }
         }
         
@@ -1074,7 +1074,7 @@ var transformFrom2D = Matrix4.inverseTransformation(//
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState, renderState, shaderProgram);
         } else {*/
-        command.execute(context, renderPass: renderPass, frustumUniformBuffer: frustumUniformBuffer)
+        command.execute(in: context, renderPass: renderPass, frustumUniformBuffer: frustumUniformBuffer)
         //}
         
         /*if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
@@ -1165,7 +1165,7 @@ var transformFrom2D = Matrix4.inverseTransformation(//
         }*/
     }
     func translucentCompare(a: DrawCommand, b: DrawCommand, position: Cartesian3) -> Bool {
-    return b.boundingVolume!.distanceSquaredTo(position) > a.boundingVolume!.distanceSquaredTo(position)
+    return b.boundingVolume!.distanceSquaredTo(cartesian: position) > a.boundingVolume!.distanceSquaredTo(cartesian: position)
 }
 
     func executeTranslucentCommandsSorted(
@@ -1207,12 +1207,12 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         
         // Create a working frustum from the original camera frustum
         let frustum: Frustum
-        if camera.frustum.fovy != Double.NaN {
-            frustum = camera.frustum.clone(PerspectiveFrustum())
+        if camera.frustum.fovy != Double.nan {
+            frustum = camera.frustum.clone(target: PerspectiveFrustum())
         } else if camera.frustum.infiniteProjectionMatrix != nil {
-            frustum = camera.frustum.clone(PerspectiveOffCenterFrustum())
+            frustum = camera.frustum.clone(target: PerspectiveOffCenterFrustum())
         } else {
-            frustum = camera.frustum.clone(OrthographicFrustum())
+            frustum = camera.frustum.clone(target: OrthographicFrustum())
         }
         
         // Ideally, we would render the sky box and atmosphere last for
@@ -1221,17 +1221,17 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         frustum.far = camera.frustum.far
         context.uniformState.updateFrustum(frustum)
         
-        let wholeFrustumUniformBuffer = context.wholeFrustumUniformBufferProvider.currentBuffer(context.bufferSyncState)
-        context.uniformState.setFrustumUniforms(wholeFrustumUniformBuffer)
+        let wholeFrustumUniformBuffer = context.wholeFrustumUniformBufferProvider.currentBuffer(index: context.bufferSyncState)
+        context.uniformState.setFrustumUniforms(buffer: wholeFrustumUniformBuffer)
         wholeFrustumUniformBuffer.signalWriteComplete()
         
-        let spaceRenderPass = context.createRenderPass(passState)
+        let spaceRenderPass = context.createRenderPass(passState: passState)
         
         if let skyBoxCommand = _environmentState.skyBoxCommand {
-            executeCommand(skyBoxCommand, renderPass: spaceRenderPass, frustumUniformBuffer: wholeFrustumUniformBuffer)
+            executeCommand(command: skyBoxCommand, renderPass: spaceRenderPass, frustumUniformBuffer: wholeFrustumUniformBuffer)
         }
         if _environmentState.isSkyAtmosphereVisible {
-            executeCommand(_environmentState.skyAtmosphereCommand!, renderPass: spaceRenderPass, frustumUniformBuffer: wholeFrustumUniformBuffer)
+            executeCommand(command: _environmentState.skyAtmosphereCommand!, renderPass: spaceRenderPass, frustumUniformBuffer: wholeFrustumUniformBuffer)
         }
         
         /*
@@ -1269,7 +1269,7 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         if _environmentState.useOIT {
             if _executeOITFunction == nil {
                 _executeOITFunction = { scene, executeFunction, passState, commands in
-                    self._oit!.executeCommands(scene, executeFunction: executeFunction, passState: passState, commands: commands)
+                    self._oit!.executeCommands(scene: scene, executeFunction: executeFunction, passState: passState, commands: commands)
                 }
             }
             executeTranslucentCommands = _executeOITFunction!
@@ -1282,13 +1282,13 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         let clearDepth = _clearDepthCommand
 
         // Execute commands in each frustum in back to front order
-        for (index, frustumCommands) in _frustumCommandsList.reverse().enumerate() {
+        for (index, frustumCommands) in _frustumCommandsList.reversed().enumerated() {
             
             // Avoid tearing artifacts between adjacent frustums in the opaque passes
             frustum.near = index != 0 ? frustumCommands.near * OpaqueFrustumNearOffset : frustumCommands.near
             frustum.far = frustumCommands.far
             
-            let globeDepth = debugShowGlobeDepth ? getDebugGlobeDepth(index) : _globeDepth
+            let globeDepth = debugShowGlobeDepth ? getDebugGlobeDepth(index: index) : _globeDepth
             
             let fb: Framebuffer?
             if debugShowGlobeDepth && globeDepth != nil && _environmentState.useGlobeDepthFramebuffer {
@@ -1300,26 +1300,26 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
             
             context.uniformState.updateFrustum(frustum)
             
-            let opaqueFrustumUniformBuffer = frustumCommands.opaqueUniformBufferProvider.currentBuffer(context.bufferSyncState)
-            context.uniformState.setFrustumUniforms(opaqueFrustumUniformBuffer)
+            let opaqueFrustumUniformBuffer = frustumCommands.opaqueUniformBufferProvider.currentBuffer(index: context.bufferSyncState)
+            context.uniformState.setFrustumUniforms(buffer: opaqueFrustumUniformBuffer)
             opaqueFrustumUniformBuffer.signalWriteComplete()
             
-            clearDepth.execute(context, passState: passState)
+            clearDepth.execute(context: context, passState: passState)
             
             context.uniformState.updatePass(.Globe)
         
             let globeCommandList = frustumCommands.commands[Pass.Globe.rawValue]
             
             if !globeCommandList.isEmpty {
-                let globeRenderPass = context.createRenderPass(passState)
+                let globeRenderPass = context.createRenderPass(passState: passState)
                 
                 for command in globeCommandList {
-                    executeCommand(command, renderPass: globeRenderPass, frustumUniformBuffer: opaqueFrustumUniformBuffer)
+                    executeCommand(command: command, renderPass: globeRenderPass, frustumUniformBuffer: opaqueFrustumUniformBuffer)
                 }
                 
                 if globeDepth != nil && _environmentState.useGlobeDepthFramebuffer && (copyGlobeDepth || debugShowGlobeDepth) {
-                    globeDepth!.update(context)
-                    globeDepth!.executeCopyDepth(context, passState: passState)
+                    globeDepth!.update(context: context)
+                    globeDepth!.executeCopyDepth(context: context, passState: passState)
                 }
                 
                 if debugShowGlobeDepth && globeDepth != nil && _environmentState.useGlobeDepthFramebuffer {
@@ -1334,20 +1334,20 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
             let groundCommandList = frustumCommands.commands[Pass.Ground.rawValue]
             
             if !groundCommandList.isEmpty {
-                let groundRenderPass = context.createRenderPass(passState)
+                let groundRenderPass = context.createRenderPass(passState: passState)
                 
                 for command in groundCommandList {
-                    executeCommand(command, renderPass: groundRenderPass, frustumUniformBuffer: opaqueFrustumUniformBuffer)
+                    executeCommand(command: command, renderPass: groundRenderPass, frustumUniformBuffer: opaqueFrustumUniformBuffer)
                 }
                 groundRenderPass.complete()
             }
 
             if clearGlobeDepth {
-                let groundDepthRenderPass = context.createRenderPass(passState)
+                let groundDepthRenderPass = context.createRenderPass(passState: passState)
                 
-                clearDepth.execute(context, passState: passState)
+                clearDepth.execute(context: context, passState: passState)
                 if useDepthPlane {
-                    _depthPlane.execute(context, renderPass: groundDepthRenderPass, frustumUniformBuffer: opaqueFrustumUniformBuffer)
+                    _depthPlane.execute(context: context, renderPass: groundDepthRenderPass, frustumUniformBuffer: opaqueFrustumUniformBuffer)
                 }
                 groundDepthRenderPass.complete()
             }
@@ -1361,10 +1361,10 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
                 context.uniformState.updatePass(Pass(rawValue: pass)!)
                 let commands = frustumCommands.commands[pass]
                 if !commands.isEmpty {
-                    let renderPass = context.createRenderPass(passState)
+                    let renderPass = context.createRenderPass(passState: passState)
                     
                     for command in commands {
-                        executeCommand(command, renderPass: renderPass, frustumUniformBuffer: opaqueFrustumUniformBuffer)
+                        executeCommand(command: command, renderPass: renderPass, frustumUniformBuffer: opaqueFrustumUniformBuffer)
                     }
                     renderPass.complete()
                 }
@@ -1375,8 +1375,8 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
                 frustum.near = frustumCommands.near
                 context.uniformState.updateFrustum(frustum)
             }
-            let transparentUniformBuffer = frustumCommands.transparentUniformBufferProvider.currentBuffer(context.bufferSyncState)
-            context.uniformState.setFrustumUniforms(transparentUniformBuffer)
+            let transparentUniformBuffer = frustumCommands.transparentUniformBufferProvider.currentBuffer(index: context.bufferSyncState)
+            context.uniformState.setFrustumUniforms(buffer: transparentUniformBuffer)
             transparentUniformBuffer.signalWriteComplete()
             
             let commands = frustumCommands.commands[Pass.Translucent.rawValue]
@@ -1397,21 +1397,21 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         context.uniformState.updatePass(.Compute)
         
         if let sunComputeCommand = _environmentState.sunComputeCommand {
-            sunComputeCommand.execute(_computeEngine)
+            sunComputeCommand.execute(computeEngine: _computeEngine)
         }
         // each command has a different render target so needs separate pass
         for command in _computeCommandList { 
-            command.execute(_computeEngine)
+            command.execute(computeEngine: _computeEngine)
         }
     }
     
     func executeOverlayCommands(passState: PassState) {
         if !_overlayCommandList.isEmpty {
             
-            _clearNullCommand.execute(context, passState: passState)
-            let overlayRenderPass = context.createRenderPass(passState)
+            _clearNullCommand.execute(context: context, passState: passState)
+            let overlayRenderPass = context.createRenderPass(passState: passState)
             for command in _overlayCommandList {
-                command.execute(context, renderPass: overlayRenderPass)
+                command.execute(in: context, renderPass: overlayRenderPass)
             }
             overlayRenderPass.complete()
         }
@@ -1420,10 +1420,10 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
     func executeOverlayTextCommands(passState: PassState) {
         if !_overlayTextCommandList.isEmpty {
             
-            _clearNullCommand.execute(context, passState: passState)
-            let overlayTextRenderPass = context.createRenderPass(passState)
+            _clearNullCommand.execute(context: context, passState: passState)
+            let overlayTextRenderPass = context.createRenderPass(passState: passState)
             for command in _overlayTextCommandList {
-                command.execute(context, renderPass: overlayTextRenderPass)
+                command.execute(in: context, renderPass: overlayTextRenderPass)
             }
             overlayTextRenderPass.complete()
         }
@@ -1476,9 +1476,9 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
             passState.viewport = Cartesian4(x: 0, y: 0, width: Double(context.width), height: Double(context.height))
             
             if mode != SceneMode.Scene2D {
-                executeCommandsInViewport(true, passState: passState, backgroundColor: backgroundColor, picking: picking)
+                executeCommandsInViewport(firstViewport: true, passState: passState, backgroundColor: backgroundColor, picking: picking)
             } else {
-                execute2DViewportCommands(passState, backgroundColor: backgroundColor, picking: picking)
+                execute2DViewportCommands(passState: passState, backgroundColor: backgroundColor, picking: picking)
             }
         }
     }
@@ -1581,19 +1581,19 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         createPotentiallyVisibleSet()
         
         if firstViewport {
-            updateAndClearFramebuffers(passState, clearColor: backgroundColor, picking: picking)
+            updateAndClearFramebuffers(passState: passState, clearColor: backgroundColor, picking: picking)
             executeComputeCommands()
         }
         
-        executeCommands(passState)
+        executeCommands(passState: passState)
     }
     
     func updateEnvironment () {
         
         // Update celestial and terrestrial environment effects
         let renderPass = frameState.passes.render
-        _environmentState.skyBoxCommand = renderPass && skyBox != nil ? skyBox!.update(frameState) : nil
-        _environmentState.skyAtmosphereCommand = renderPass && skyAtmosphere != nil ? skyAtmosphere!.update(frameState) : nil
+        _environmentState.skyBoxCommand = renderPass && skyBox != nil ? skyBox!.update(frameState: frameState) : nil
+        _environmentState.skyAtmosphereCommand = renderPass && skyAtmosphere != nil ? skyAtmosphere!.update(frameState: frameState) : nil
         /*let sunCommands = renderPass && sun != nil ? sun.update(scene) : nil
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
@@ -1605,7 +1605,7 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
-            _depthPlane.update(frameState)
+            _depthPlane.update(frameState: frameState)
         }
     }
     
@@ -1614,14 +1614,14 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
     func updatePrimitives() {
         
         if globe != nil {
-            globe.update(&frameState)
+            globe.update(frameState: &frameState)
         }
         
-        groundPrimitives.update(&frameState)
-        primitives.update(&frameState)
+        groundPrimitives.update(frameState: &frameState)
+        primitives.update(frameState: &frameState)
         
         for primitive in offscreenPrimitives {
-            primitive.update(&frameState)
+            primitive.update(frameState: &frameState)
         }
     }
     
@@ -1649,13 +1649,13 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         
         // Clear the pass state framebuffer.
         _clearColorCommand.color = clearColor
-        _clearColorCommand.execute(context, passState: passState)
+        _clearColorCommand.execute(context: context, passState: passState)
         
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
         _environmentState.useGlobeDepthFramebuffer = !picking && _globeDepth != nil
         if _environmentState.useGlobeDepthFramebuffer {
-            _globeDepth!.update(context)
-            _globeDepth!.clear(context, passState: passState, clearColor: clearColor)
+            _globeDepth!.update(context: context)
+            _globeDepth!.clear(context: context, passState: passState, clearColor: clearColor)
         }
         
         // Determine if there are any translucent surfaces in any of the frustums.
@@ -1679,8 +1679,8 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
         _environmentState.useFXAA = !picking && fxaa
         if _environmentState.useFXAA {
-            _fxaa.update(context)
-            _fxaa.clear(context, passState: passState, clearColor: clearColor)
+            _fxaa.update(context: context)
+            _fxaa.clear(context: context, passState: passState, clearColor: clearColor)
         }
         
         if false /*sunVisible && scene.sunBloom)&& !useWebVR*/ {
@@ -1692,7 +1692,7 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         }
         
         if passState.framebuffer != nil {
-            _clearColorCommand.execute(context, passState: passState)
+            _clearColorCommand.execute(context: context, passState: passState)
         }
     }
     
@@ -1717,23 +1717,23 @@ var scratchOrthographicFrustum = new OrthographicFrustum();
         
         if useOIT {
             passState.framebuffer = useFXAA ? _fxaa.getColorFramebuffer() : nil
-            _oit!.execute(context, passState: passState)
+            _oit!.execute(context: context, passState: passState)
         }
         
         if useFXAA {
             if !useOIT && useGlobeDepthFramebuffer {
                 passState.framebuffer = _fxaa.getColorFramebuffer()
-                _globeDepth!.executeCopyColor(context, passState: passState)
+                _globeDepth!.executeCopyColor(context: context, passState: passState)
             }
             passState.framebuffer = _environmentState.originalFramebuffer
-            let fxaaRenderPass = context.createRenderPass(passState)
-            _fxaa.execute(context, renderPass: fxaaRenderPass)
+            let fxaaRenderPass = context.createRenderPass(passState: passState)
+            _fxaa.execute(context: context, renderPass: fxaaRenderPass)
             fxaaRenderPass.complete()
         }
         
         if !useOIT && !useFXAA && useGlobeDepthFramebuffer {
             passState.framebuffer = _environmentState.originalFramebuffer
-            _globeDepth!.executeCopyColor(context, passState: passState)
+            _globeDepth!.executeCopyColor(context: context, passState: passState)
         }
     }
 
@@ -1764,7 +1764,7 @@ function callAfterRenderFunctions(frameState) {
         }*/
         
         //tweens.update()
-        camera.update(mode)
+        camera.update(mode: mode)
         screenSpaceCameraController.update()
     }
 
@@ -1790,14 +1790,14 @@ function callAfterRenderFunctions(frameState) {
         let uniformState = context.uniformState
 
         let frameNumber = Math.incrementWrap(frameState.frameNumber, maximumValue: 15000000, minimumValue: 1)
-        updateFrameState(frameNumber, time: time)
+        updateFrameState(frameNumber: frameNumber, time: time)
         frameState.passes.render = true
         // FIXME: Creditdisplay
         //frameState.creditDisplay.beginFrame();
         
-        fog.update(&frameState)
+        fog.update(frameState: &frameState)
         
-        uniformState.update(context, frameState: frameState)
+        uniformState.update(context: context, frameState: frameState)
         _computeCommandList.removeAll()
         _overlayCommandList.removeAll()
         _overlayTextCommandList.removeAll()
@@ -1808,25 +1808,25 @@ function callAfterRenderFunctions(frameState) {
         passState.scissorTest = nil
         
         if let globe = globe {
-            globe.beginFrame(&frameState)
+            globe.beginFrame(frameState: &frameState)
         }
         
         if !context.beginFrame() {
             return
         }
         
-        FontAtlas.generateMipmapsIfRequired(context)
+        FontAtlas.generateMipmapsIfRequired(context: context)
         
         updateEnvironment()
-        updateFramerate(passState)
+        updateFramerate(passState: passState)
 
-        updateAndExecuteCommands(passState, backgroundColor: backgroundColor)
-        resolveFramebuffers(passState)
-        executeOverlayCommands(passState)
-        executeOverlayTextCommands(passState)
+        updateAndExecuteCommands(passState: passState, backgroundColor: backgroundColor)
+        resolveFramebuffers(passState: passState)
+        executeOverlayCommands(passState: passState)
+        executeOverlayTextCommands(passState: passState)
         
         if let globe = globe {
-            globe.endFrame(&frameState)
+            globe.endFrame(frameState: &frameState)
         }
         
         /*frameState.creditDisplay.endFrame();
@@ -2275,7 +2275,7 @@ Scene.prototype.isDestroyed = function() {
     //MARK:- Offscreen quads
     func executeOffscreenCommands () {
         for quad in offscreenPrimitives {
-            quad.execute(context)
+            quad.execute(context: context)
         }
     }
     
@@ -2294,7 +2294,7 @@ Scene.prototype.isDestroyed = function() {
         if let debugString = globe.debugString {
             framerateDisplay.string += "\n\(debugString)"
         }
-        framerateDisplay.update(&frameState)/* {
+        framerateDisplay.update(frameState: &frameState)/* {
             _clearNullCommand.execute(context, passState: passState)
             let textRenderPass = context.createRenderPass(passState)
             command.execute(context, renderPass: textRenderPass)

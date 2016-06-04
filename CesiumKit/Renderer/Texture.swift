@@ -25,11 +25,11 @@ enum TextureSource {
         get {
             switch self {
             case .Image(let image):
-                return CGImageGetWidth(image)
+                return image.width
             case .Buffer(let imagebuffer):
                 return imagebuffer.width
             case .CubeMap(let sources):
-                return CGImageGetWidth(sources.negativeX)
+                return sources.negativeX.width
             }
         }
     }
@@ -38,11 +38,11 @@ enum TextureSource {
         get {
             switch self {
             case .Image(let image):
-                return Int(CGImageGetHeight(image))
+                return Int(image.height)
             case .Buffer(let imagebuffer):
                 return imagebuffer.height
             case .CubeMap(let sources):
-                return CGImageGetHeight(sources.negativeX)
+                return sources.negativeX.height
             }
         }
     }
@@ -152,7 +152,7 @@ public class Texture {
             _mipmapSampler = Sampler(context: context, mipMagFilter: .Linear)
         }
         
-        let sampler = (mipmapped ? _mipmapSampler : _defaultSampler)
+        let sampler: Sampler = (mipmapped ? _mipmapSampler : _defaultSampler)
         self.sampler = options.sampler ?? sampler
         
         assert(mipmapped == false || Math.isPowerOfTwo(width) && Math.isPowerOfTwo(height), "Cannot use mipmapping for NPOT textures")
@@ -183,51 +183,51 @@ public class Texture {
         
         let textureDescriptor: MTLTextureDescriptor
         if cubeMap {
-            textureDescriptor = MTLTextureDescriptor.textureCubeDescriptorWithPixelFormat(pixelFormat.toMetal(), size: width, mipmapped: mipmapped)
+            textureDescriptor = MTLTextureDescriptor.textureCubeDescriptor(with: pixelFormat.toMetal(), size: width, mipmapped: mipmapped)
         } else {
-            textureDescriptor = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(pixelFormat.toMetal(),
+            textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(with: pixelFormat.toMetal(),
                 width: width, height: height, mipmapped: mipmapped)
         }
         textureDescriptor.usage = usage.toMetal()
         
         if pixelFormat == .Depth32Float || pixelFormat == .Depth32FloatStencil8 || pixelFormat == .Stencil8 || textureDescriptor.sampleCount > 1 {
-            textureDescriptor.storageMode = .Private
+            textureDescriptor.storageMode = .private
         }
         #if os(OSX)
             if pixelFormat == .Depth32FloatStencil8 {
-                textureDescriptor.storageMode = .Private
+                textureDescriptor.storageMode = .private
             }
         #endif
-        metalTexture = context.device.newTextureWithDescriptor(textureDescriptor)
+        metalTexture = context.device.newTexture(with: textureDescriptor)
         
          if let source = source {
             switch source {
             case .Buffer(let imagebuffer):
                 // Source: UInt8 array
                 let region = MTLRegionMake2D(0, 0, imagebuffer.width, imagebuffer.height)
-                metalTexture.replaceRegion(region, mipmapLevel: 0, withBytes: imagebuffer.array, bytesPerRow: imagebuffer.width * strideofValue(imagebuffer.array.first!) * imagebuffer.bytesPerPixel)
+                metalTexture.replace(region, mipmapLevel: 0, withBytes: imagebuffer.array, bytesPerRow: imagebuffer.width * strideofValue(imagebuffer.array.first!) * imagebuffer.bytesPerPixel)
             case .Image(let imageRef): // From http://stackoverflow.com/questions/14362868/convert-an-uiimage-in-a-texture
                 
-                let textureData = imageRef.renderToPixelArray(
+                guard let textureData = imageRef.renderToPixelArray(
                     colorSpace: _colorSpace,
                     premultiplyAlpha: premultiplyAlpha,
                     flipY: flipY
-                )
+                    ) else { return }
                 // Copy to texture
                 let region = MTLRegionMake2D(0, 0, width, height)
-                metalTexture.replaceRegion(region, mipmapLevel: 0, withBytes: textureData.array, bytesPerRow: textureData.bytesPerRow)
+                metalTexture.replace(region, mipmapLevel: 0, withBytes: textureData.array, bytesPerRow: textureData.bytesPerRow)
             case .CubeMap(let sources):
 
                 let region = MTLRegionMake2D(0, 0, width, height)
 
                 for slice in 0..<6 {
-                    let textureData = sources.sources[slice].renderToPixelArray(
+                    guard let textureData = sources.sources[slice].renderToPixelArray(
                         colorSpace: _colorSpace,
                         premultiplyAlpha: premultiplyAlpha,
                         flipY: flipY
-                    )
+                        ) else { return }
                     // Copy to texture
-                    metalTexture.replaceRegion(
+                    metalTexture.replace(
                         region,
                         mipmapLevel: 0,
                         slice: slice,
@@ -248,7 +248,7 @@ public class Texture {
         self.metalTexture = metalTexture
         self.width = metalTexture.width
         self.height = metalTexture.height
-        self.cubeMap = metalTexture.textureType == .TypeCube
+        self.cubeMap = metalTexture.textureType == .typeCube
         self.pixelFormat = PixelFormat(rawValue: metalTexture.pixelFormat.rawValue) ?? .Invalid
         self.textureFilterAnisotropic = true
         self.usage = TextureUsage(rawValue: metalTexture.usage.rawValue)
@@ -429,9 +429,9 @@ public class Texture {
     */
     func generateMipmaps (context: Context, completionBlock: MTLCommandBufferHandler? = nil) {
         assert(mipmapped, "mipmapping must be enabled during texture creation")
-        let blitEncoder = context.createBlitCommandEncoder(completionBlock)
-        blitEncoder.generateMipmapsForTexture(metalTexture)
-        context.completeBlitPass(blitEncoder)
+        let blitEncoder = context.createBlitCommandEncoder(completionHandler: completionBlock)
+        blitEncoder.generateMipmaps(for: metalTexture)
+        context.completeBlitPass(encoder: blitEncoder)
     }
 
 }

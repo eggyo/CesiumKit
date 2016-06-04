@@ -41,7 +41,7 @@ extension NSData {
     func getUInt8Array(_ pos: Int = 0, elementCount: Int? = nil) -> [UInt8] {
         let elementCount = elementCount ?? self.length
         assert(self.length >= pos + elementCount, "requested array out of bounds")
-        var result = [UInt8](count: elementCount, repeatedValue: 0)
+        var result = [UInt8](repeating: 0, count: elementCount)
         result.withUnsafeMutableBufferPointer({ (pointer: inout UnsafeMutableBufferPointer<UInt8>) in
             memcpy(pointer.baseAddress, self.bytes + pos, elementCount)
         })
@@ -52,7 +52,7 @@ extension NSData {
         let elementCount = elementCount ?? self.length / strideof(UInt16)
         let arrayByteLength = elementCount * strideof(UInt16)
         assert(self.length >= pos + arrayByteLength, "requested array out of bounds")
-        var result = [UInt16](count: elementCount, repeatedValue: 0)
+        var result = [UInt16](repeating: 0, count: elementCount)
         result.withUnsafeMutableBufferPointer({ (pointer: inout UnsafeMutableBufferPointer<UInt16>) in
             memcpy(pointer.baseAddress, self.bytes + pos, arrayByteLength)
         })
@@ -63,7 +63,7 @@ extension NSData {
         let elementCount = elementCount ?? self.length / strideof(UInt32)
         let arrayByteLength = elementCount * strideof(UInt32)
         assert(self.length >= pos + arrayByteLength, "requested array out of bounds")
-        var result = [UInt32](count: elementCount, repeatedValue: 0)
+        var result = [UInt32](repeating: 0, count: elementCount)
         result.withUnsafeMutableBufferPointer({ (pointer: inout UnsafeMutableBufferPointer<UInt32>) in
             memcpy(pointer.baseAddress, self.bytes + pos, arrayByteLength)
         })

@@ -165,16 +165,16 @@ public class Camera: DRU {
     var heading: Double {
         if _mode != .Morphing {
             let oldTransform = _transform
-            let transform = Transforms.eastNorthUpToFixedFrame(positionWC, ellipsoid: _projection.ellipsoid)
+            let transform = Transforms.eastNorthUpToFixedFrame(origin: positionWC, ellipsoid: _projection.ellipsoid)
             _setTransform(transform)
             
             let heading = getHeading(direction: direction, up: up)
             
-            _setTransform(oldTransform);
+            _setTransform(oldTransform)
             
             return heading;
         }
-        return Double.NaN
+        return Double.nan
     }
     
     
@@ -189,7 +189,7 @@ public class Camera: DRU {
         if _mode != .Morphing {
             
             let oldTransform = _transform
-            let transform = Transforms.eastNorthUpToFixedFrame(positionWC, ellipsoid: _projection.ellipsoid)
+            let transform = Transforms.eastNorthUpToFixedFrame(origin: positionWC, ellipsoid: _projection.ellipsoid)
             _setTransform(transform)
             
             let pitch = getPitch(direction: direction)
@@ -199,7 +199,7 @@ public class Camera: DRU {
             return pitch
         }
         
-        return Double.NaN
+        return Double.nan
     }
     
     
@@ -213,7 +213,7 @@ public class Camera: DRU {
     var roll: Double {
         if _mode != .Morphing {
             let oldTransform = _transform
-            let transform = Transforms.eastNorthUpToFixedFrame(positionWC, ellipsoid: _projection.ellipsoid)
+            let transform = Transforms.eastNorthUpToFixedFrame(origin: positionWC, ellipsoid: _projection.ellipsoid)
             _setTransform(transform)
             
             let roll = getRoll(direction: direction, up: up, right: right)
@@ -223,7 +223,7 @@ public class Camera: DRU {
             return roll
         }
         
-        return Double.NaN
+        return Double.nan
     }
     
     
@@ -414,23 +414,23 @@ public class Camera: DRU {
     init(projection: MapProjection, mode: SceneMode, initialWidth: Double, initialHeight: Double) {
         
         _projection = projection
-        _maxCoord = _projection.project(Cartographic(longitude: M_PI, latitude: M_PI_2))
+        _maxCoord = _projection.project(cartographic: Cartographic(longitude: M_PI, latitude: M_PI_2))
         _mode = mode
         
         transform2DInverse = transform2D.inverse
         
         frustum = PerspectiveFrustum()
         frustum.aspectRatio = Double(initialWidth) / Double(initialHeight)
-        frustum.fov = Math.toRadians(60.0)
+        frustum.fov = Math.toRadians(degrees: 60.0)
         
         updateViewMatrix()
         
         // set default view
-        position = rectangleCameraPosition3D(defaultViewRectangle, updateCamera: true)
+        position = rectangleCameraPosition3D(rectangle: defaultViewRectangle, updateCamera: true)
         
         var mag = position.magnitude
         mag += mag * defaultViewFactor
-        position  = position.normalize().multiplyByScalar(mag)
+        position  = position.normalize().multiply(scalar: mag)
     }
     
     // Testing only
@@ -439,25 +439,28 @@ public class Camera: DRU {
         width: Int,
         height: Int,
         mapProjection: MapProjection//,
-        /* tweens = new TweenCollection();*/)) {
-            
-            _projection = fakeScene.mapProjection
-            _maxCoord = _projection.project(Cartographic(longitude: M_PI, latitude: M_PI_2))
-            
-            transform2DInverse = transform2D.inverse
-            
-            frustum = PerspectiveFrustum()
-            frustum.aspectRatio = Double(fakeScene.canvas.width) / Double(fakeScene.canvas.height)
-            frustum.fov = Math.toRadians(60.0)
-            
-            updateViewMatrix()
-            
-            // set default view
-            position = rectangleCameraPosition3D(defaultViewRectangle, updateCamera: true)
+        /* tweens = new TweenCollection();*/))
+    {
         
-            var mag = position.magnitude
-            mag += mag * defaultViewFactor
-            position  = position.normalize().multiplyByScalar(mag)
+        _projection = fakeScene.mapProjection
+        _maxCoord = _projection.project(cartographic: Cartographic(longitude: M_PI, latitude: M_PI_2))
+        
+        transform2DInverse = transform2D.inverse
+        
+        frustum = PerspectiveFrustum()
+        frustum.aspectRatio = Double(fakeScene.canvas.width) / Double(fakeScene.canvas.height)
+        frustum.fov = Math.toRadians(degrees: 60.0)
+        
+        updateViewMatrix()
+        
+        // set default view
+        position = rectangleCameraPosition3D(rectangle: defaultViewRectangle, updateCamera: true)
+        
+        var mag = position.magnitude
+        mag += mag * defaultViewFactor
+        position  = position
+            .normalize()
+            .multiply(scalar: mag)
     }
     
     
@@ -652,11 +655,11 @@ public class Camera: DRU {
         }
         
         if positionChanged || transformChanged {
-            _positionWC = _actualTransform.multiplyByPoint(_position)
+            _positionWC = _actualTransform.multiply(point: _position)
             
             // Compute the Cartographic position of the camera.
             if _mode == .Scene3D || _mode == .Morphing {
-                if let positionCartographic = _projection.ellipsoid.cartesianToCartographic(_positionWC) {
+                if let positionCartographic = _projection.ellipsoid.cartesianToCartographic(cartesian: _positionWC) {
                     _positionCartographic = positionCartographic
                 }
             } else {
@@ -670,7 +673,7 @@ public class Camera: DRU {
                 if _mode == .Scene2D {
                     positionENU.z = height
                 }
-                _positionCartographic = _projection.unproject(positionENU)
+                _positionCartographic = _projection.unproject(cartesian: positionENU)
             }
         }
         
@@ -679,7 +682,7 @@ public class Camera: DRU {
             if abs(1.0 - det) > Math.Epsilon2 {
                
                 let invUpMag = 1.0 / up.magnitudeSquared
-                let w0 = direction.multiplyByScalar(up.dot(direction) * invUpMag)
+                let w0 = direction.multiply(scalar: up.dot(direction) * invUpMag)
                 _up = up.subtract(w0).normalize()
                 up = _up
                 
@@ -689,15 +692,15 @@ public class Camera: DRU {
         }
         
         if directionChanged || transformChanged {
-            _directionWC = _actualTransform.multiplyByPointAsVector(direction)
+            _directionWC = _actualTransform.multiply(pointAsVector: direction)
         }
         
         if upChanged || transformChanged {
-            _upWC = _actualTransform.multiplyByPointAsVector(up)
+            _upWC = _actualTransform.multiply(pointAsVector: up)
         }
         
         if rightChanged || transformChanged {
-            _rightWC = _actualTransform.multiplyByPointAsVector(right)
+            _rightWC = _actualTransform.multiply(pointAsVector: right)
         }
         
         if positionChanged || directionChanged || upChanged || rightChanged || transformChanged {
@@ -765,7 +768,7 @@ public class Camera: DRU {
         }
     }
     
-    func _setTransform (transform: Matrix4) {
+    func _setTransform (_ transform: Matrix4) {
         let position = positionWC
         let up = upWC
         let direction = directionWC
@@ -774,9 +777,9 @@ public class Camera: DRU {
         _transformChanged = true
         updateMembers()
         
-        self.position = _actualInvTransform.multiplyByPoint(position)
-        self.direction = _actualInvTransform.multiplyByPointAsVector(direction)
-        self.up = _actualInvTransform.multiplyByPointAsVector(up)
+        self.position = _actualInvTransform.multiply(point: position)
+        self.direction = _actualInvTransform.multiply(pointAsVector: direction)
+        self.up = _actualInvTransform.multiply(pointAsVector: up)
         self.right = self.direction.cross(self.up)
         updateMembers()
     }
@@ -784,7 +787,7 @@ public class Camera: DRU {
     private func setView3D (position: Cartesian3, heading: Double, pitch: Double, roll: Double) {
         
         let currentTransform = transform
-        let localTransform = Transforms.eastNorthUpToFixedFrame(position, ellipsoid: _projection.ellipsoid)
+        let localTransform = Transforms.eastNorthUpToFixedFrame(origin: position, ellipsoid: _projection.ellipsoid)
         _setTransform(localTransform)
         
         self.position = Cartesian3.zero
@@ -803,7 +806,7 @@ public class Camera: DRU {
         
         let position = _projection.ellipsoid.cartographicToCartesian(location)
         let currentTransform = transform
-        let localTransform = Transforms.eastNorthUpToFixedFrame(position, ellipsoid: _projection.ellipsoid)
+        let localTransform = Transforms.eastNorthUpToFixedFrame(origin: position, ellipsoid: _projection.ellipsoid)
         _setTransform(localTransform)
         
         self.position = Cartesian3.zero
@@ -822,8 +825,8 @@ public class Camera: DRU {
         
         if position != positionWC {
             if (convert) {
-                let cartographic = _projection.ellipsoid.cartesianToCartographic(position)
-                self.position = _projection.project(cartographic!)
+                let cartographic = _projection.ellipsoid.cartesianToCartographic(cartesian: position)
+                self.position = _projection.project(cartographic: cartographic!)
             } else {
                 self.position = position
             }
@@ -845,8 +848,8 @@ public class Camera: DRU {
         
         if position != positionWC {
             if (convert) {
-                let cartographic = _projection.ellipsoid.cartesianToCartographic(position)
-                self.position = _projection.project(cartographic!)
+                let cartographic = _projection.ellipsoid.cartesianToCartographic(cartesian: position)
+                self.position = _projection.project(cartographic: cartographic!)
             } else {
                 self.position = position
             }
@@ -877,11 +880,11 @@ public class Camera: DRU {
         }
         
         if _mode == .Scene3D {
-            let transform = Transforms.eastNorthUpToFixedFrame(position, ellipsoid: _projection.ellipsoid)
+            let transform = Transforms.eastNorthUpToFixedFrame(origin: position, ellipsoid: _projection.ellipsoid)
             let invTransform = transform.inverse
             
-            direction = invTransform.multiplyByPointAsVector(direction)
-            up = invTransform.multiplyByPointAsVector(up)
+            direction = invTransform.multiply(pointAsVector: direction)
+            up = invTransform.multiply(pointAsVector: up)
         }
         
         let right = direction.cross(up)
@@ -956,13 +959,13 @@ public class Camera: DRU {
         var destination = destination ?? .cartesian(positionWC)
         
         if case let Destination.rectangle(rectangle) = destination {
-            destination = Destination.cartesian(getRectangleCameraCoordinates(rectangle))
+            destination = Destination.cartesian(getRectangleCameraCoordinates(rectangle: rectangle))
             convert = false
         }
         var orientation = orientation
         if orientation != nil {
             if case Orientation.directionUp(direction: _, up: _) = orientation! {
-                orientation = directionUpToHeadingPitchRoll(destination.cartesian!, orientation: orientation!)
+                orientation = directionUpToHeadingPitchRoll(position: destination.cartesian!, orientation: orientation!)
             }
         }
         
@@ -979,11 +982,11 @@ public class Camera: DRU {
         }
 
         if _mode == .Scene3D {
-            setView3D(destination.cartesian!, heading: heading, pitch: pitch, roll: roll)
+            setView3D(position: destination.cartesian!, heading: heading, pitch: pitch, roll: roll)
         } else if _mode == SceneMode.Scene2D {
-            setView2D(destination.cartesian!, convert: convert)
+            setView2D(position: destination.cartesian!, convert: convert)
         } else {
-            setViewCV(destination.cartesian!, heading: heading, pitch: pitch, roll: roll, convert: convert)
+            setViewCV(position: destination.cartesian!, heading: heading, pitch: pitch, roll: roll, convert: convert)
         }
     }
 
@@ -1050,7 +1053,7 @@ public class Camera: DRU {
      */
     func worldToCameraCoordinates(cartesian: Cartesian4) -> Cartesian4 {
         updateMembers()
-        return _actualInvTransform.multiplyByVector(cartesian)
+        return _actualInvTransform.multiply(vector: cartesian)
     }
     /*
     /**
@@ -1188,7 +1191,7 @@ public class Camera: DRU {
     * @see Camera#moveDown
     */
     public func move (direction: Cartesian3, amount: Double) {
-        position = position.add(direction.multiplyByScalar(amount))
+        position = position.add(direction.multiply(scalar: amount))
         if _mode == SceneMode.Scene2D {
             assertionFailure("unimplemented")
             //clampMove2D(this, cameraPosition);
@@ -1206,7 +1209,7 @@ public class Camera: DRU {
      */
     public func moveForward (amount: Double? = nil) {
         let amount = amount ?? defaultMoveAmount
-        move(direction, amount: amount)
+        move(direction: direction, amount: amount)
     }
      /**
      * Translates the camera's position by <code>amount</code> along the opposite direction
@@ -1360,9 +1363,9 @@ public class Camera: DRU {
         let quaternion = Quaternion(axis: axis, angle: -turnAngle)
         let rotation = Matrix3(quaternion: quaternion)
         
-        direction = rotation.multiplyByVector(direction)
-        up = rotation.multiplyByVector(up)
-        right = rotation.multiplyByVector(right)
+        direction = rotation.multiply(vector: direction)
+        up = rotation.multiply(vector: up)
+        right = rotation.multiply(vector: right)
     }
     /*
     /**
@@ -1418,9 +1421,9 @@ public class Camera: DRU {
         let turnAngle = angle ?? defaultRotateAmount
         let quaternion = Quaternion(axis: axis, angle: -turnAngle)
         let rotation = Matrix3(quaternion: quaternion)
-        position = rotation.multiplyByVector(position)
-        direction = rotation.multiplyByVector(direction)
-        up = rotation.multiplyByVector(up)
+        position = rotation.multiply(vector: position)
+        direction = rotation.multiply(vector: direction)
+        up = rotation.multiply(vector: up)
         right = direction.cross(up)
         up = right.cross(direction)
     }
@@ -1453,7 +1456,7 @@ public class Camera: DRU {
     */
     func rotateUp (angle: Double?) {
         let rotateAngle = angle ?? defaultRotateAmount
-        rotateVertical(-rotateAngle)
+        rotateVertical(angle: -rotateAngle)
     }
     
     func rotateVertical(angle: Double) {
@@ -1479,12 +1482,12 @@ public class Camera: DRU {
                 }
                 
                 let tangent = constrainedAxis.cross(p)
-                rotate(tangent, angle: angle)
+                rotate(axis: tangent, angle: angle)
             } else if (northParallel && angle < 0 || southParallel && angle > 0) {
-                rotate(right, angle: angle)
+                rotate(axis: right, angle: angle)
             }
         } else {
-            rotate(right, angle: angle)
+            rotate(axis: right, angle: angle)
         }
     }
     
@@ -1500,7 +1503,7 @@ public class Camera: DRU {
      * @see Camera#rotate
      */
     func rotateRight (angle: Double) {
-        rotateHorizontal(-angle)
+        rotateHorizontal(angle: -angle)
     }
     /*
     /**
@@ -1521,9 +1524,9 @@ public class Camera: DRU {
     
     func rotateHorizontal(angle: Double) {
         if constrainedAxis != nil {
-            rotate(constrainedAxis!, angle: angle)
+            rotate(axis: constrainedAxis!, angle: angle)
         } else {
-            rotate(up, angle: angle)
+            rotate(axis: up, angle: angle)
         }
     }
     
@@ -1560,7 +1563,7 @@ public class Camera: DRU {
     }
     
     func zoom3D(amount: Double) {
-        move(direction, amount: amount)
+        move(direction: direction, amount: amount)
     }
     
     /**
@@ -1575,9 +1578,9 @@ public class Camera: DRU {
     public func zoomIn (amount: Double? = nil) {
         let amount = amount ?? defaultZoomAmount
         if _mode == .Scene2D {
-            zoom2D(amount)
+            zoom2D(amount: amount)
         } else {
-            zoom3D(amount)
+            zoom3D(amount: amount)
         }
     }
     
@@ -1650,8 +1653,8 @@ public class Camera: DRU {
      */
     public func lookAt (target: Cartesian3, offset: Offset) {
         
-        let transform = Transforms.eastNorthUpToFixedFrame(target, ellipsoid: Ellipsoid.wgs84())
-        lookAtTransform(transform, offset: offset.offset)
+        let transform = Transforms.eastNorthUpToFixedFrame(origin: target, ellipsoid: Ellipsoid.wgs84())
+        lookAtTransform(transform: transform, offset: offset.offset)
     }
 
     /**
@@ -1793,7 +1796,7 @@ public class Camera: DRU {
             }
             
             ellipsoidGeodesic.setEndPoints(start: northCartographic, end: southCartographic)
-            latitude = ellipsoidGeodesic.interpolateUsingFraction(0.5).latitude
+            latitude = ellipsoidGeodesic.interpolateUsing(fraction: 0.5).latitude
         }
         
         let centerCartographic = Cartographic(longitude: longitude, latitude: latitude)
@@ -1831,7 +1834,7 @@ public class Camera: DRU {
         var tanPhi = tan(frustum.fovy * 0.5)
         var tanTheta = frustum.aspectRatio * tanPhi
         
-        func computeD(direction: Cartesian3, upOrRight: Cartesian3, corner: Cartesian3, tanThetaOrPhi: Double) -> Double {
+        func computeD(_ direction: Cartesian3, upOrRight: Cartesian3, corner: Cartesian3, tanThetaOrPhi: Double) -> Double {
             let opposite = abs(upOrRight.dot(corner))
             return opposite / tanThetaOrPhi - direction.dot(corner)
         }
@@ -1869,7 +1872,7 @@ public class Camera: DRU {
                 computeD(direction, upOrRight: right, corner: equatorPosition, tanThetaOrPhi: tanTheta)
             )
         }
-        return center.add(direction.multiplyByScalar(-d))
+        return center.add(direction.multiply(scalar: -d))
     }
     
     /*
@@ -1990,7 +1993,7 @@ public class Camera: DRU {
     
         switch _mode {
         case .Scene3D:
-            return rectangleCameraPosition3D(rectangle, updateCamera: false)
+            return rectangleCameraPosition3D(rectangle: rectangle, updateCamera: false)
         /*case .ColumbusView:
             return rectangleCameraPositionColumbusView(this, rectangle, this._projection, result, true)
         case .Scene2D:
@@ -2002,8 +2005,8 @@ public class Camera: DRU {
 
     func pickEllipsoid3D(windowPosition: Cartesian2, ellipsoid: Ellipsoid = Ellipsoid.wgs84()) -> Cartesian3? {
         
-        let ray = getPickRay(windowPosition)
-        let intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid: ellipsoid)
+        let ray = getPickRay(windowPosition: windowPosition)
+        let intersection = IntersectionTests.rayEllipsoid(ray: ray, ellipsoid: ellipsoid)
         if intersection == nil {
             return nil
         }
@@ -2056,7 +2059,7 @@ public class Camera: DRU {
     func pickEllipsoid (windowPosition: Cartesian2, ellipsoid: Ellipsoid = Ellipsoid.wgs84()) -> Cartesian3? {
         
         if _mode == .Scene3D {
-            return pickEllipsoid3D(windowPosition, ellipsoid: ellipsoid)
+            return pickEllipsoid3D(windowPosition: windowPosition, ellipsoid: ellipsoid)
         } else if _mode == .Scene2D {
             assertionFailure("Unimplemented")
             //result = pickMap2D(this, windowPosition, this._projection, result);
@@ -2081,11 +2084,11 @@ public class Camera: DRU {
         
         let position = positionWC
         
-        var nearCenter = directionWC.multiplyByScalar(near)
+        var nearCenter = directionWC.multiply(scalar: near)
         nearCenter = position.add(nearCenter)
         
-        let xDir = rightWC.multiplyByScalar(x * near * tanTheta)
-        let yDir = upWC.multiplyByScalar(y * near * tanPhi)
+        let xDir = rightWC.multiply(scalar: x * near * tanTheta)
+        let yDir = upWC.multiply(scalar: y * near * tanPhi)
         
         let direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize()
         
@@ -2128,8 +2131,8 @@ public class Camera: DRU {
     */
     func getPickRay (windowPosition: Cartesian2) -> Ray {
         
-        if frustum.aspectRatio != Double.NaN && frustum.fovy != Double.NaN && frustum.near != Double.NaN {
-            return getPickRayPerspective(windowPosition)
+        if frustum.aspectRatio != Double.nan && frustum.fovy != Double.nan && frustum.near != Double.nan {
+            return getPickRayPerspective(windowPosition: windowPosition)
         }
         assertionFailure("unimplemented")
         return Ray()
@@ -2142,9 +2145,9 @@ public class Camera: DRU {
      * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
      * @returns {Number} The distance to the bounding sphere.
      */
-    func distanceToBoundingSphere (boundingSphere: BoundingSphere) -> Double {
+    func distanceToBoundingSphere (_ boundingSphere: BoundingSphere) -> Double {
         let toCenter = positionWC.subtract(boundingSphere.center)
-        let proj = directionWC.multiplyByScalar(toCenter.dot(directionWC))
+        let proj = directionWC.multiply(scalar: toCenter.dot(directionWC))
         return max(0.0, proj.magnitude - boundingSphere.radius)
     }
     

@@ -79,7 +79,7 @@ class QuantizedMeshUpsampler {
         var vertexCount = 0
         let hasVertexNormals = parentNormalBuffer != nil
         
-        for (i, (parentU, parentV)) in zip(parentUBuffer, parentVBuffer).enumerate() {
+        for (i, (parentU, parentV)) in zip(parentUBuffer, parentVBuffer).enumerated() {
             let u = Int(parentU)
             let v = Int(parentV)
             if (isEastChild && u >= halfMaxShort || !isEastChild && u <= halfMaxShort) &&
@@ -101,7 +101,7 @@ class QuantizedMeshUpsampler {
         
         var clippedTriangleVertices = [Vertex(), Vertex(), Vertex()]
         
-        for i in 0.stride(to: parentIndices.count, by: 3) {
+        for i in stride(from: 0, to: parentIndices.count, by: 3) {
             let i0 = parentIndices[i]
             let i1 = parentIndices[i + 1]
             let i2 = parentIndices[i + 2]
@@ -237,20 +237,20 @@ class QuantizedMeshUpsampler {
                     height: height
                 )
             )
-            cartesianVertices.appendContentsOf((0..<3).map { cartesian.floatRepresentation[$0] })
+            cartesianVertices.append(contentsOf: (0..<3).map { cartesian.floatRepresentation[$0] })
         }
         
-        let boundingSphere = BoundingSphere.fromVertices(cartesianVertices, center: Cartesian3.zero, stride: 3)
+        let boundingSphere = BoundingSphere.fromVertices(positions: cartesianVertices, center: Cartesian3.zero, stride: 3)
         let orientedBoundingBox = OrientedBoundingBox(fromRectangle: childRectangle, minimumHeight: minimumHeight, maximumHeight: maximumHeight, ellipsoid: ellipsoid)
         
         let occluder = EllipsoidalOccluder(ellipsoid: ellipsoid)
-        let horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices: cartesianVertices, stride: 3, center: boundingSphere.center)!
+        let horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVertices(directionToPoint: boundingSphere.center, vertices: cartesianVertices, stride: 3, center: boundingSphere.center)!
         
         let heightRange = maximumHeight - minimumHeight
 
         var vertices = uBuffer.map { UInt16 ($0) }
-        vertices.appendContentsOf(vBuffer.map { UInt16($0) })
-        vertices.appendContentsOf(heightBuffer.map { UInt16(Double(maxShort) * ($0 - minimumHeight) / heightRange) } )
+        vertices.append(contentsOf: vBuffer.map { UInt16($0) })
+        vertices.append(contentsOf: heightBuffer.map { UInt16(Double(maxShort) * ($0 - minimumHeight) / heightRange) } )
 
         return (
             vertices: vertices,
@@ -354,7 +354,7 @@ private class Vertex {
     var second: Vertex? = nil
     var ratio: Double? = nil
  
-    func clone (result: Vertex?) -> Vertex {
+    func clone (_ result: Vertex?) -> Vertex {
         
         let result = result ?? Vertex()
 
@@ -458,21 +458,21 @@ private class Vertex {
         second = AttributeCompression.octDecode(x: vertex.second!.getNormalX(), y: vertex.second!.getNormalY())
         
         depth -= 1
-        return AttributeCompression.octEncode(first.lerp(second, t: Double(vertex.ratio!)).normalize())
+        return AttributeCompression.octEncode(vector: first.lerp(second, t: Double(vertex.ratio!)).normalize())
     }
  
     func getNormalX () -> UInt8 {
         if let index = index {
             return normalBuffer![index * 2]
         }
-        return UInt8(lerpOctEncodedNormal(self).x)
+        return UInt8(lerpOctEncodedNormal(vertex: self).x)
     }
     
     func getNormalY () -> UInt8 {
         if let index = index {
             return normalBuffer![index * 2 + 1]
         }
-        return UInt8(lerpOctEncodedNormal(self).y)
+        return UInt8(lerpOctEncodedNormal(vertex: self).y)
     }
 
 }

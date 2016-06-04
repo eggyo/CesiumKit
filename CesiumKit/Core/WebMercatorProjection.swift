@@ -41,7 +41,7 @@ struct WebMercatorProjection: MapProjection {
     *
     * @type {Number}
     */
-    static let maximumLatitude: Double = WebMercatorProjection.mercatorAngleToGeodeticLatitude(M_PI)
+    static let maximumLatitude: Double = WebMercatorProjection.mercatorAngleToGeodeticLatitude(mercatorAngle: M_PI)
     
     init (ellipsoid: Ellipsoid = Ellipsoid.wgs84()) {
         self.ellipsoid = ellipsoid
@@ -90,7 +90,7 @@ struct WebMercatorProjection: MapProjection {
     */
     func project(cartographic: Cartographic) -> Cartesian3 {
         return Cartesian3(x: cartographic.longitude * semimajorAxis,
-            y: WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographic.latitude) * semimajorAxis,
+            y: WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude: cartographic.latitude) * semimajorAxis,
             z: cartographic.height)
     }
     
@@ -106,7 +106,7 @@ struct WebMercatorProjection: MapProjection {
     */
     func unproject(cartesian: Cartesian3) -> Cartographic  {
         return Cartographic(longitude: cartesian.x * oneOverSemimajorAxis,
-            latitude: WebMercatorProjection.mercatorAngleToGeodeticLatitude(cartesian.y * oneOverSemimajorAxis),
+            latitude: WebMercatorProjection.mercatorAngleToGeodeticLatitude(mercatorAngle: cartesian.y * oneOverSemimajorAxis),
             height: cartesian.z)
     }
 }

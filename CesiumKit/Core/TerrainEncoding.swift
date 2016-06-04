@@ -103,7 +103,7 @@ struct TerrainEncoding {
         let center = axisAlignedBoundingBox.center
         var toENU = fromENU.inverse
         
-        toENU = Matrix4(translation: minimum.negate()).multiply(other: toENU)
+        toENU = Matrix4(translation: minimum.negate()).multiply(toENU)
         
         let scale = Cartesian3(
             x: 1.0 / dimensions.x,
@@ -112,7 +112,7 @@ struct TerrainEncoding {
         )
         toENU = Matrix4(scale: scale).multiply(toENU)
         
-        var matrix = fromENU.setTranslation(translation: Cartesian3.zero)
+        var matrix = fromENU.set(translation: Cartesian3.zero)
         
         var fromENU = fromENU
         
@@ -184,20 +184,20 @@ struct TerrainEncoding {
         let v = uv.y
         
         if quantization == .bits12 {
-            var position = toScaledENU.multiplyByPoint(position)
+            var position = toScaledENU.multiply(point: position)
             
             position.x = Math.clamp(position.x, min: 0.0, max: 1.0)
             position.y = Math.clamp(position.y, min: 0.0, max: 1.0)
             position.z = Math.clamp(position.z, min: 0.0, max: 1.0)
             
             let hDim = maximumHeight - minimumHeight
-            let h = Math.clamp(value: (height - minimumHeight) / hDim, min: 0.0, max: 1.0)
+            let h = Math.clamp((height - minimumHeight) / hDim, min: 0.0, max: 1.0)
             
-            let compressed0 = AttributeCompression.compressTextureCoordinates(Cartesian2(x: position.x, y: position.y))
+            let compressed0 = AttributeCompression.compress(textureCoordinates: Cartesian2(x: position.x, y: position.y))
             
-            let compressed1 = AttributeCompression.compressTextureCoordinates(Cartesian2(x: position.z, y: h))
+            let compressed1 = AttributeCompression.compress(textureCoordinates: Cartesian2(x: position.z, y: h))
             
-            let compressed2 = AttributeCompression.compressTextureCoordinates(Cartesian2(x: u, y: v))
+            let compressed2 = AttributeCompression.compress(textureCoordinates: Cartesian2(x: u, y: v))
             
             vertexBuffer.append(compressed0)
             vertexBuffer.append(compressed1)
@@ -214,7 +214,7 @@ struct TerrainEncoding {
         }
         
         if hasVertexNormals {
-            vertexBuffer.append(AttributeCompression.octPackFloat(normalToPack!))
+            vertexBuffer.append(AttributeCompression.octPackFloat(encoded: normalToPack!))
         }
     }
     
@@ -224,14 +224,14 @@ struct TerrainEncoding {
         var result = Cartesian3()
         
         if quantization == .bits12 {
-            let xy = AttributeCompression.decompressTextureCoordinates(buffer[index])
+            let xy = AttributeCompression.decompress(textureCoordinates: buffer[index])
             result.x = xy.x
             result.y = xy.y
             
-            let zh = AttributeCompression.decompressTextureCoordinates(buffer[index + 1])
+            let zh = AttributeCompression.decompress(textureCoordinates: buffer[index + 1])
             result.z = zh.x
             
-            return fromScaledENU.multiplyByPoint(result)
+            return fromScaledENU.multiply(point: result)
         }
         result.x = Double(buffer[index])
         result.y = Double(buffer[index + 1])
@@ -243,7 +243,7 @@ struct TerrainEncoding {
         let index = index * getStride()
         
         if quantization == .bits12 {
-            return AttributeCompression.decompressTextureCoordinates(buffer[index + 2])
+            return AttributeCompression.decompress(textureCoordinates: buffer[index + 2])
         }
         return Cartesian2(x: Double(buffer[index + 4]), y: Double(buffer[index + 5]))
     }
@@ -252,7 +252,7 @@ struct TerrainEncoding {
         let index = index * getStride()
         
         if quantization == .bits12 {
-            let zh = AttributeCompression.decompressTextureCoordinates(buffer[index + 1])
+            let zh = AttributeCompression.decompress(textureCoordinates: buffer[index + 1])
             return zh.y * (maximumHeight - minimumHeight) + minimumHeight
         }
         return Double(buffer[index + 3])

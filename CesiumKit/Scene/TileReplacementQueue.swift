@@ -56,8 +56,8 @@ class TileReplacementQueue {
             let previous = tileToTrim!.replacementPrevious
             
             if tileToTrim!.eligibleForUnloading {
-                tileToTrim!.freeResources(_tileProvider)
-                remove(tileToTrim!)
+                tileToTrim!.freeResources(provider: _tileProvider)
+                remove(item: tileToTrim!)
             }
             tileToTrim = previous
         }
@@ -116,7 +116,7 @@ class TileReplacementQueue {
         
         if item.replacementPrevious != nil || item.replacementNext != nil {
             // tile already in the list, remove from its current location
-            remove(item)
+            remove(item: item)
         }
         
         item.replacementPrevious = nil

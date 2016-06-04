@@ -29,10 +29,10 @@
 
 struct OrthographicFrustum: Frustum {
 
-    var fov: Double = Double.NaN
-    var fovy: Double = Double.NaN
+    var fov: Double = Double.nan
+    var fovy: Double = Double.nan
     
-    var aspectRatio: Double = Double.NaN
+    var aspectRatio: Double = Double.nan
     
     let infiniteProjectionMatrix: Matrix4? = nil
     
@@ -48,32 +48,32 @@ struct OrthographicFrustum: Frustum {
     * @type {Number}
     * @default undefined
     */
-    var left = Double.NaN
-    private var _left = Double.NaN
+    var left = Double.nan
+    private var _left = Double.nan
     
     /**
     * Defines the right clipping plane.
     * @type {Number}
     * @default undefined
     */
-    var right = Double.NaN
-    private var _right = Double.NaN
+    var right = Double.nan
+    private var _right = Double.nan
     
     /**
     * Defines the top clipping plane.
     * @type {Number}
     * @default undefined
     */
-    var top = Double.NaN
-    private var _top = Double.NaN
+    var top = Double.nan
+    private var _top = Double.nan
     
     /**
     * Defines the bottom clipping plane.
     * @type {Number}
     * @default undefined
     */
-    var bottom = Double.NaN
-    private var _bottom = Double.NaN
+    var bottom = Double.nan
+    private var _bottom = Double.nan
     
     /**
     * The distance of the near plane.

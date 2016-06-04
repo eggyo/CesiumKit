@@ -107,7 +107,7 @@ struct ClearCommand {
     }
 
     func execute(context: Context, passState: PassState?) {
-        context.clear(self, passState: passState)
+        context.clear(clearCommand: self, passState: passState)
     }
     
 }

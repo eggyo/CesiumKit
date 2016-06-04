@@ -177,8 +177,8 @@ class QuadtreeTile: Equatable {
     */
     class func createLevelZeroTiles (tilingScheme: TilingScheme) -> [QuadtreeTile] {
         
-        let numberOfLevelZeroTilesX = tilingScheme.numberOfXTilesAtLevel(0)
-        let numberOfLevelZeroTilesY = tilingScheme.numberOfYTilesAtLevel(0)
+        let numberOfLevelZeroTilesX = tilingScheme.numberOfXTilesAt(level: 0)
+        let numberOfLevelZeroTilesY = tilingScheme.numberOfYTilesAt(level: 0)
         
         var result = [QuadtreeTile]()
         
@@ -196,17 +196,17 @@ class QuadtreeTile: Equatable {
         if added != nil && removed != nil {
             // level zero tile
             
-            for (i, data) in removed!.enumerate() {
+            for (i, data) in removed!.enumerated() {
                 
                 for j in 0..<customData.count {
                     if (customData[j] === data) {
-                        customData.removeAtIndex(j)
+                        customData.remove(at: j)
                         break
                     }
                 }
             }
             
-            for (i, data) in added!.enumerate() {
+            for (i, data) in added!.enumerated() {
                 if rectangle.contains(data.positionCartographic) {
                     customData.append(data)
                 }
@@ -247,7 +247,7 @@ class QuadtreeTile: Equatable {
         
         if _children != nil {
             for tile in _children! {
-                tile.freeResources(provider)
+                tile.freeResources(provider: provider)
             }
             _children = nil
         }

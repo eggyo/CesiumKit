@@ -125,14 +125,14 @@ struct TileBoundingBox {
             .normalize()
         
         // Compute the normal of the plane bounding the southern edge of the tile.
-        let southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(rectangle.southeast)
+        let southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(cartographic: rectangle.southeast)
         let westVector = westernMidpointCartesian.subtract(easternMidpointCartesian)
         southNormal = southeastCornerNormal
             .cross(westVector)
             .normalize()
         
         // Compute the normal of the plane bounding the northern edge of the tile.
-        let northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(rectangle.northwest)
+        let northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(cartographic: rectangle.northwest)
         northNormal = westVector
             .cross(northwestCornerNormal)
             .normalize()
@@ -163,11 +163,11 @@ struct TileBoundingBox {
             var northNormal = self.northNormal
             
             if frameState.mode != .Scene3D {
-                southwestCornerCartesian = frameState.mapProjection.project(rectangle.southwest)
+                southwestCornerCartesian = frameState.mapProjection.project(cartographic: rectangle.southwest)
                 southwestCornerCartesian.z = southwestCornerCartesian.y
                 southwestCornerCartesian.y = southwestCornerCartesian.x
                 southwestCornerCartesian.x = 0.0
-                northeastCornerCartesian = frameState.mapProjection.project(rectangle.northeast)
+                northeastCornerCartesian = frameState.mapProjection.project(cartographic: rectangle.northeast)
                 northeastCornerCartesian.z = northeastCornerCartesian.y
                 northeastCornerCartesian.y = northeastCornerCartesian.x
                 northeastCornerCartesian.x = 0.0

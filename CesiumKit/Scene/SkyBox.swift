@@ -60,7 +60,7 @@ class SkyBox {
     private var _cubemap: Texture? = nil
     
     convenience init (sources: [String]) {
-        self.init(sources: CubeMap.loadImagesForSources(sources))
+        self.init(sources: CubeMap.loadImagesForSources(sources: sources))
     }
 
     init (sources: CubeMapSources) {
@@ -88,7 +88,7 @@ class SkyBox {
             return nil
         }
         
-        let context = frameState.context
+        let context: Context = frameState.context
         
         if frameState.mode != .Scene3D && frameState.mode != SceneMode.Morphing {
             return nil
@@ -100,7 +100,7 @@ class SkyBox {
         }
         
         if _sourcesUpdated {
-            let width = Int(CGImageGetWidth(sources.positiveX))
+            let width = Int(sources.positiveX.width)
             _cubemap = Texture(
                 context: context,
                 options: TextureOptions(
@@ -124,9 +124,9 @@ class SkyBox {
             let geometry = BoxGeometry(
                 fromDimensions: Cartesian3(x: 2.0, y: 2.0, z: 2.0),
                 vertexFormat : VertexFormat.PositionOnly()
-                ).createGeometry(context)
+                ).createGeometry(context: context)
             
-            let attributeLocations = GeometryPipeline.createAttributeLocations(geometry)
+            let attributeLocations = GeometryPipeline.createAttributeLocations(geometry: geometry)
             
             _command.vertexArray = VertexArray(
                 fromGeometry: geometry,
@@ -140,9 +140,9 @@ class SkyBox {
                 fragmentShaderSource: ShaderSource(sources: [Shaders["SkyBoxFS"]!]),
                 vertexDescriptor: VertexDescriptor(attributes: _command.vertexArray!.attributes),
                 depthStencil: context.depthTexture,
-                blendingState: .AlphaBlend()
+                blendingState: .alphaBlend()
             )
-            _command.uniformMap?.uniformBufferProvider = _command.pipeline!.shaderProgram.createUniformBufferProvider(context.device, deallocationBlock: nil)
+            _command.uniformMap?.uniformBufferProvider = _command.pipeline!.shaderProgram.createUniformBufferProvider(device: context.device, deallocationBlock: nil)
             
             _command.renderState = RenderState(
                 device: context.device

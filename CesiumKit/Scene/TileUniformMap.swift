@@ -110,7 +110,7 @@ class TileUniformMap: NativeUniformMap {
     
     var dayTextureTranslationAndScale: [float4] {
         get {
-            var floatArray = [float4](count: MaximumMetalTextureCount, repeatedValue: float4())
+            var floatArray = [float4](repeating: float4(), count: MaximumMetalTextureCount)
             memcpy(&floatArray, &_uniformStruct.dayTextureTranslationAndScale, sizeof(float4) * MaximumMetalTextureCount)
             return floatArray
         }
@@ -121,7 +121,7 @@ class TileUniformMap: NativeUniformMap {
     
     var dayTextureTexCoordsRectangle: [float4] {
         get {
-            var floatArray = [float4](count: MaximumMetalTextureCount, repeatedValue: float4())
+            var floatArray = [float4](repeating: float4(), count: MaximumMetalTextureCount)
             memcpy(&floatArray, &_uniformStruct.dayTextureTexCoordsRectangle, sizeof(float4) * MaximumMetalTextureCount)
             return floatArray
         }

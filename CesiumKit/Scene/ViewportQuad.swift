@@ -110,17 +110,17 @@ public class ViewportQuad: Primitive {
                     owner: self
                 ),
                 depthStencil: context.depthTexture,
-                blendingState: BlendingState.AlphaBlend()
+                blendingState: BlendingState.alphaBlend()
             )
             
             _overlayCommand.pass = .Overlay
             
             if let map = _overlayCommand.uniformMap {
-                map.uniformBufferProvider = _overlayCommand.pipeline!.shaderProgram.createUniformBufferProvider(context.device, deallocationBlock: nil)
+                map.uniformBufferProvider = _overlayCommand.pipeline!.shaderProgram.createUniformBufferProvider(device: context.device, deallocationBlock: nil)
             }
         }
         
-        _material.update(context)
+        _material.update(context: context)
         
         _overlayCommand.uniformMap = _material.uniformMap
         

@@ -166,7 +166,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     }
     
     func computeDefaultLevelZeroMaximumGeometricError() -> Double {
-        return tilingScheme.ellipsoid.maximumRadius * Math.TwoPi * 0.25 / (65.0 * Double(tilingScheme.numberOfXTilesAtLevel(level: 0)))
+        return tilingScheme.ellipsoid.maximumRadius * Math.TwoPi * 0.25 / (65.0 * Double(tilingScheme.numberOfXTilesAt(level: 0)))
     }
     
     private func sortTileImageryByLayerIndex (a: TileImagery, b: TileImagery) -> Bool {
@@ -235,7 +235,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
         if _renderState == nil {
             _renderState = RenderState(
                 device: context.device,
-                cullFace: .Back,
+                cullFace: .back,
                 depthTest: RenderState.DepthTest(enabled: true, function: .Less)
             )
         }
@@ -244,9 +244,9 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
             
             _blendRenderState = RenderState(
                 device: context.device,
-                cullFace: .Back,
+                cullFace: .back,
                 depthTest: RenderState.DepthTest(enabled: true, function: .LessOrEqual),
-                blending: BlendingState.AlphaBlend(color: Cartesian4())
+                blending: BlendingState.alphaBlend(color: Cartesian4())
             )
         }
         // And the tile render commands to the command list, sorted by texture count.
@@ -298,7 +298,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     * @returns {Number} The maximum geometric error in meters.
     */
     func levelMaximumGeometricError(level: Int) -> Double {
-        return terrainProvider.levelMaximumGeometricError(level: level)
+        return terrainProvider.maximumGeometricErrorFor(level: level)
     }
     
     /**
@@ -771,7 +771,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
             command.uniformMap = uniformMap
             
             command.uniformMap!.uniformBufferProvider = getManualUniformBufferProvider(context: context, size: strideof(TileUniformStruct), deallocationBlock: { provider in
-                    self.returnManualUniformBufferProvider(provider)
+                    self.returnManualUniformBufferProvider(provider: provider)
                 }
             )
                         
@@ -818,8 +818,8 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     func updateRTCPosition(forTile tile: QuadtreeTile, frameState: FrameState) {
         let viewMatrix = frameState.camera!.viewMatrix
         let rtc = tile.data!.center
-        let centerEye = viewMatrix.multiplyByPoint(cartesian: rtc)
-        let modifiedModelView = viewMatrix.setTranslation(centerEye)
+        let centerEye = viewMatrix.multiply(point: rtc)
+        let modifiedModelView = viewMatrix.set(translation: centerEye)
         
         for command in tile._cachedCommands {
             (command.uniformMap! as! TileUniformMap).modifiedModelView = modifiedModelView.floatRepresentation

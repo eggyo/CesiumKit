@@ -80,13 +80,13 @@ class FXAA {
             let uniformMap = FXAAUniformMap()
             uniformMap.texture = _texture
             uniformMap.step = Cartesian2(x: 1.0 / Double(_texture!.width), y: 1.0 / Double(_texture!.height))
-            uniformMap.uniformBufferProvider = _command!.pipeline!.shaderProgram.createUniformBufferProvider(context.device, deallocationBlock: nil)
+            uniformMap.uniformBufferProvider = _command!.pipeline!.shaderProgram.createUniformBufferProvider(device: context.device, deallocationBlock: nil)
             _command!.uniformMap = uniformMap
         }
     }
 
     func execute (context: Context, renderPass: RenderPass) {
-        _command!.execute(context, renderPass: renderPass)
+        _command!.execute(in: context, renderPass: renderPass)
     }
     
     func clear (context: Context, passState: PassState, clearColor: Cartesian4) {
@@ -94,7 +94,7 @@ class FXAA {
         
         passState.framebuffer = _fbo
         _clearCommand.color = clearColor
-        _clearCommand.execute(context, passState: passState)
+        _clearCommand.execute(context: context, passState: passState)
         
         passState.framebuffer = framebuffer
     }

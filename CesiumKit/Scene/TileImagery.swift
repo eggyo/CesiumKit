@@ -64,7 +64,7 @@ class TileImagery {
             }
             readyImagery = loadingImagery
             loadingImagery = nil
-            textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile, tileImagery: self)
+            textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile: tile, tileImagery: self)
             return true // done loading
         }
         
@@ -88,7 +88,7 @@ class TileImagery {
                 
                 if let ancestor = ancestor {
                     ancestor.addReference()
-                    textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile, tileImagery: self)
+                    textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile: tile, tileImagery: self)
                 }
         }
         

@@ -153,16 +153,16 @@ struct OrientedBoundingBox: BoundingVolume {
     init (fromTangentPlaneExtents tangentPlane: EllipsoidTangentPlane, minimumX: Double, maximumX: Double, minimumY: Double, maximumY: Double, minimumZ: Double, maximumZ: Double) {
         
         var halfAxes = Matrix3()
-        halfAxes = halfAxes.setColumn(0, cartesian: tangentPlane.xAxis)
-        halfAxes = halfAxes.setColumn(1, cartesian: tangentPlane.yAxis)
-        halfAxes = halfAxes.setColumn(2, cartesian: tangentPlane.zAxis)
+        halfAxes = halfAxes.setColumn(index: 0, cartesian: tangentPlane.xAxis)
+        halfAxes = halfAxes.setColumn(index: 1, cartesian: tangentPlane.yAxis)
+        halfAxes = halfAxes.setColumn(index: 2, cartesian: tangentPlane.zAxis)
         
         var centerOffset = Cartesian3(x: (minimumX + maximumX) / 2.0, y: (minimumY + maximumY) / 2.0, z: (minimumZ + maximumZ) / 2.0)
         let scale = Cartesian3(x: (maximumX - minimumX) / 2.0, y: (maximumY - minimumY) / 2.0, z: (maximumZ - minimumZ) / 2.0)
         
-        centerOffset = halfAxes.multiplyByVector(centerOffset)
+        centerOffset = halfAxes.multiply(vector: centerOffset)
         center = tangentPlane.origin.add(centerOffset)
-        halfAxes = halfAxes.multiplyByScale(scale)
+        halfAxes = halfAxes.multiplyByScale(scale: scale)
         self.halfAxes = halfAxes
     }
     
@@ -279,7 +279,7 @@ struct OrientedBoundingBox: BoundingVolume {
     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
     *                      intersects the plane.
     */
-    func intersectPlane(plane: Plane) -> Intersect {
+    func intersect(plane: Plane) -> Intersect {
         
         let normal = plane.normal
         let normalX = normal.x, normalY = normal.y, normalZ = normal.z
@@ -515,7 +515,7 @@ struct OrientedBoundingBox: BoundingVolume {
         let vHalf = halfAxes.column(1).magnitude
         let wHalf = halfAxes.column(2).magnitude
 
-        return !occluder.isBoundingSphereVisible(BoundingSphere(center: center, radius: max(uHalf, vHalf, wHalf)))
+        return !occluder.isBoundingSphereVisible(occludee: BoundingSphere(center: center, radius: max(uHalf, vHalf, wHalf)))
     }
     
     /*

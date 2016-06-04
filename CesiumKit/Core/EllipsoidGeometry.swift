@@ -333,8 +333,8 @@ extension EllipsoidGeometry: Packable {
         index += 1
         let slicePartitions = array[index]
         
-        _stackPartitions = stackPartitions == Double.NaN ? 64 : Int(stackPartitions)
-        _slicePartitions = slicePartitions == Double.NaN ? 64 : Int(slicePartitions)
+        _stackPartitions = stackPartitions == Double.nan ? 64 : Int(stackPartitions)
+        _slicePartitions = slicePartitions == Double.nan ? 64 : Int(slicePartitions)
     }
 
 }

@@ -38,7 +38,7 @@ public class PrimitiveCollection: Primitive {
     private var _primitives = [Primitive]()
     
     override init () {
-        guid = NSUUID().UUIDString
+        guid = NSUUID().uuidString
     }
     /*
 
@@ -335,7 +335,7 @@ return this._primitives[index];
         }
         
         for primitive in _primitives {
-            primitive.update(&frameState)
+            primitive.update(frameState: &frameState)
             
         }
     }

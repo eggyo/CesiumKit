@@ -18,7 +18,7 @@ enum OrbitType {
     
     case Hyperbolic
     
-    static func fromEccentricity(eccentricity: Double, tolerance: Double) -> OrbitType {
+    static func from (eccentricity: Double, tolerance: Double) -> OrbitType {
         assert(eccentricity >= 0, "eccentricity cannot be negative.")
         
         if eccentricity <= tolerance {

@@ -32,7 +32,7 @@ class Queue<T: Equatable> {
         if _array.count == 0 {
             return nil
         }
-        return _array.removeAtIndex(0)
+        return _array.remove(at: 0)
     }
     
     var head: T? {

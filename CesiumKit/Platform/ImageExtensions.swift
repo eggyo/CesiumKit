@@ -37,12 +37,12 @@ extension CGImage {
             if let error = imageOperation.error {
                 completionBlock(nil, error)
             }
-            completionBlock(CGImage.fromData(data: imageOperation.data), nil)
+            completionBlock(CGImage.from(data: imageOperation.data), nil)
         }
         imageOperation.enqueue()
     }
     
-    class func fromData(data: NSData) -> CGImage? {
+    class func from(data: NSData) -> CGImage? {
         #if os(OSX)
             let nsImage = NSImage(data: data)
             return nsImage?.cgImage

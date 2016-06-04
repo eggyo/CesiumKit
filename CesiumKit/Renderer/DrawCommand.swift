@@ -68,7 +68,7 @@ class DrawCommand: Command {
     * @type {PrimitiveType}
     * @default PrimitiveType.TRIANGLES
     */
-    var primitiveType: MTLPrimitiveType = .Triangle
+    var primitiveType: MTLPrimitiveType = .triangle
     
     /**
     * The vertex array.
@@ -180,7 +180,7 @@ class DrawCommand: Command {
         orientedBoundingBox: OrientedBoundingBox? = nil,
         cull: Bool = true,
         modelMatrix: Matrix4? = nil,
-        primitiveType: MTLPrimitiveType = .Triangle,
+        primitiveType: MTLPrimitiveType = .triangle,
         vertexArray: VertexArray? = nil,
         count: Int? = nil,
         offset: Int = 0,

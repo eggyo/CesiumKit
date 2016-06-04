@@ -97,7 +97,7 @@ public class SwiftRegex: NSObject, Boolean {
                                                               in: target as String,
                                                               offset: 0,
                                                               template: newValue)
-                    mutableTarget.replaceCharacters(in: match.range(groupno), with: replacement)
+                    mutableTarget.replaceCharacters(in: match.range(at: groupno), with: replacement)
                 }
             } else {
                 SwiftRegex.failure(message: "Group modify on non-mutable")
@@ -124,8 +124,8 @@ public class SwiftRegex: NSObject, Boolean {
     public func dictionary(options: NSMatchingOptions = NSMatchingOptions()) -> Dictionary<String,String> {
         var out = Dictionary<String,String>()
         for match in matchResults(options: options) {
-            out[substring(range: match.range(1)) as String] =
-                substring(range: match.range(2)) as String
+            out[substring(range: match.range(at: 1)) as String] =
+                substring(range: match.range(at: 2)) as String
         }
         return out
     }

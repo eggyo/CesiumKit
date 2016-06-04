@@ -96,7 +96,7 @@ globeDepth._debugGlobeDepthViewportCommand.execute(context, passState);
         let textureChanged = _colorTexture == nil || _colorTexture.width != width || _colorTexture.height != height
         if textureChanged {
             destroyTextures()
-            createTextures(context, width: width, height: height)
+            createTextures(context: context, width: width, height: height)
         }
         assert(_colorTexture != nil, "_colorTexture == nil")
         assert(_depthStencilTexture != nil, "_depthStencilTexture == nil")
@@ -142,7 +142,7 @@ executeDebugGlobeDepth(this, context, passState);
 
     func update (context: Context) {
 
-        updateFramebuffers(context)
+        updateFramebuffers(context: context)
         //updateCopyCommands(this, context);
     }
 
@@ -158,21 +158,22 @@ executeDebugGlobeDepth(this, context, passState);
         let origin = MTLOriginMake(0, 0, 0)
         let size = MTLSizeMake(_colorTexture.width, _colorTexture.height, 1)
         let blitEncoder = context.createBlitCommandEncoder()
-        blitEncoder.copyFromTexture(framebuffer.colorTextures![0].metalTexture,
-            sourceSlice: 0,
-            sourceLevel: 0,
-            sourceOrigin: origin,
-            sourceSize: size,
-            toTexture: passState.framebuffer.colorTextures![0].metalTexture,
-            destinationSlice: 0,
-            destinationLevel: 0,
-            destinationOrigin: origin)
-        context.completeBlitPass(blitEncoder)
+        blitEncoder.copy(from: framebuffer.colorTextures![0].metalTexture,
+                         sourceSlice: 0,
+                         sourceLevel: 0,
+                         sourceOrigin: origin,
+                         sourceSize: size,
+                         to: passState.framebuffer.colorTextures![0].metalTexture,
+                         destinationSlice: 0,
+                         destinationLevel: 0,
+                         destinationOrigin: origin
+        )
+        context.completeBlitPass(encoder: blitEncoder)
     }
     
     func clear (context: Context, passState: PassState, clearColor: Cartesian4) {
         _clearColorCommand.color = clearColor
-        _clearColorCommand.execute(context, passState: passState)
+        _clearColorCommand.execute(context: context, passState: passState)
     }
     
 }

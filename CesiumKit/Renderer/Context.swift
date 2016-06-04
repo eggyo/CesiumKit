@@ -169,21 +169,21 @@ class Context {
         
         print("Metal device: " + (device.name ?? "Unknown"))
         #if os(OSX)
-            print("- Low power: " + (device.lowPower ? "Yes" : "No"))
-            print("- Headless: " + (device.headless ? "Yes" : "No"))
+            print("- Low power: " + (device.isLowPower ? "Yes" : "No"))
+            print("- Headless: " + (device.isHeadless ? "Yes" : "No"))
         #endif
         
         _commandQueue = device.newCommandQueue()
         
         pipelineCache = PipelineCache(device: device)
-        id = NSUUID().UUIDString
+        id = NSUUID().uuidString
         
         _inflight_semaphore = dispatch_semaphore_create(3)//kInFlightCommandBuffers)
         
         //antialias = true
         
         pickObjects = Array<AnyObject>()
-        nextPickColor = Array<UInt32>(count: 1, repeatedValue: 0)
+        nextPickColor = Array<UInt32>(repeating: 0, count: 1)
         
         _debug = (0, 0)
         
@@ -227,7 +227,7 @@ class Context {
     * Creates a compiled MTLSamplerState from a MTLSamplerDescriptor. These should generally be cached.
     */
     func createSamplerState (descriptor: MTLSamplerDescriptor) -> MTLSamplerState {
-        return device.newSamplerStateWithDescriptor(descriptor)
+        return device.newSamplerState(with: descriptor)
     }
     
     func beginFrame() -> Bool {
@@ -246,7 +246,7 @@ class Context {
         
         self._lastFrameDrawCommands[bufferSyncState.rawValue].removeAll()
 
-        defaultFramebuffer.updateFromDrawable(self, drawable: _drawable, depthStencil: depthTexture ? view.depthStencilTexture : nil)
+        defaultFramebuffer.updateFromDrawable(context: self, drawable: _drawable, depthStencil: depthTexture ? view.depthStencilTexture : nil)
         
         _commandBuffer = _commandQueue.commandBuffer()
         
@@ -255,8 +255,8 @@ class Context {
             dispatch_semaphore_signal(self._inflight_semaphore)
         }
         
-        let automaticUniformBuffer = _automaticUniformBufferProvider.currentBuffer(bufferSyncState)
-        uniformState.setAutomaticUniforms(automaticUniformBuffer)
+        let automaticUniformBuffer = _automaticUniformBufferProvider.currentBuffer(index: bufferSyncState)
+        uniformState.setAutomaticUniforms(buffer: automaticUniformBuffer)
         automaticUniformBuffer.signalWriteComplete()
         
         return true
@@ -274,7 +274,7 @@ class Context {
     }
     
     func applyRenderState(pass: RenderPass, renderState: RenderState, passState: PassState) {
-        pass.applyRenderState(renderState)
+        pass.applyRenderState(renderState: renderState)
     }
     
     func createBlitCommandEncoder (completionHandler: MTLCommandBufferHandler? = nil) -> MTLBlitCommandEncoder {
@@ -313,33 +313,33 @@ class Context {
         
         let colorAttachment = passDescriptor.colorAttachments[0]
         if let c = c {
-            colorAttachment.loadAction = .Clear
-            colorAttachment.storeAction = .Store
+            colorAttachment.loadAction = .clear
+            colorAttachment.storeAction = .store
             colorAttachment.clearColor = MTLClearColorMake(c.red, c.green, c.blue, c.alpha)
         } else {
-            colorAttachment.loadAction = .Load
-            colorAttachment.storeAction = .Store
+            colorAttachment.loadAction = .load
+            colorAttachment.storeAction = .store
         }
         
         let depthAttachment = passDescriptor.depthAttachment
         if let d = d {
-            depthAttachment.loadAction = .Clear
-            depthAttachment.storeAction = .DontCare
+            depthAttachment.loadAction = .clear
+            depthAttachment.storeAction = .dontCare
             depthAttachment.clearDepth = d
         }
         
         let stencilAttachment = passDescriptor.stencilAttachment
         if let s = s {
-            stencilAttachment.loadAction = .Clear
-            stencilAttachment.storeAction = .Store
+            stencilAttachment.loadAction = .clear
+            stencilAttachment.storeAction = .store
             stencilAttachment.clearStencil = s
         }
     }
     
     func draw(command: DrawCommand, renderPass: RenderPass, frustumUniformBuffer: Buffer? = nil) {
         _lastFrameDrawCommands[bufferSyncState.rawValue].append(command)
-        beginDraw(command, renderPass: renderPass)
-        continueDraw(command, renderPass: renderPass, frustumUniformBuffer: frustumUniformBuffer)
+        beginDraw(command: command, renderPass: renderPass)
+        continueDraw(command: command, renderPass: renderPass, frustumUniformBuffer: frustumUniformBuffer)
     }
     
     func beginDraw(command: DrawCommand, renderPass: RenderPass) {
@@ -354,7 +354,7 @@ class Context {
 
         commandEncoder.setRenderPipelineState(renderPipeline.state)
 
-        applyRenderState(renderPass, renderState: rs, passState: renderPass.passState)
+        applyRenderState(pass: renderPass, renderState: rs, passState: renderPass.passState)
     }
     
     func continueDraw(command: DrawCommand, renderPass: RenderPass, frustumUniformBuffer: Buffer? = nil) {
@@ -375,7 +375,7 @@ class Context {
             return
         }
         
-        let bufferParams = renderPipeline.setUniforms(command, device: device, uniformState: uniformState)
+        let bufferParams = renderPipeline.setUniforms(command: command, device: device, uniformState: uniformState)
         
         // Don't render unless any textures required are available
         if !bufferParams.texturesValid {
@@ -390,35 +390,35 @@ class Context {
             let indexCount = count ?? va.numberOfIndices
             
             // automatic uniforms
-            commandEncoder.setVertexBuffer(_automaticUniformBufferProvider.currentBuffer(bufferSyncState).metalBuffer, offset: 0, atIndex: 0)
+            commandEncoder.setVertexBuffer(_automaticUniformBufferProvider.currentBuffer(index: bufferSyncState).metalBuffer, offset: 0, at: 0)
 
             // frustum uniforms
-            commandEncoder.setVertexBuffer(frustumUniformBuffer?.metalBuffer, offset: 0, atIndex: 1)
+            commandEncoder.setVertexBuffer(frustumUniformBuffer?.metalBuffer, offset: 0, at: 1)
 
             // manual uniforms
-            if let uniformBuffer = command.uniformMap?.uniformBufferProvider?.currentBuffer(bufferSyncState) {
-                commandEncoder.setVertexBuffer(uniformBuffer.metalBuffer, offset: 0, atIndex: 2)
+            if let uniformBuffer = command.uniformMap?.uniformBufferProvider?.currentBuffer(index: bufferSyncState) {
+                commandEncoder.setVertexBuffer(uniformBuffer.metalBuffer, offset: 0, at: 2)
             }
             
             for attribute in va.attributes {
                 if let buffer = attribute.buffer {
-                    commandEncoder.setVertexBuffer(buffer.metalBuffer, offset: 0, atIndex: attribute.bufferIndex)
+                    commandEncoder.setVertexBuffer(buffer.metalBuffer, offset: 0, at: attribute.bufferIndex)
                 }
             }
             
             // automatic uniforms
-            commandEncoder.setFragmentBuffer(_automaticUniformBufferProvider.currentBuffer(bufferSyncState).metalBuffer, offset: 0, atIndex: 0)
+            commandEncoder.setFragmentBuffer(_automaticUniformBufferProvider.currentBuffer(index: bufferSyncState).metalBuffer, offset: 0, at: 0)
             
             // frustum uniforms
-            commandEncoder.setFragmentBuffer(frustumUniformBuffer?.metalBuffer, offset: 0, atIndex: 1)
+            commandEncoder.setFragmentBuffer(frustumUniformBuffer?.metalBuffer, offset: 0, at: 1)
             
             // manual uniforms
-            if let uniformBuffer = command.uniformMap?.uniformBufferProvider?.currentBuffer(bufferSyncState) {
-                commandEncoder.setFragmentBuffer(uniformBuffer.metalBuffer, offset: bufferParams.fragmentOffset, atIndex: 2)
+            if let uniformBuffer = command.uniformMap?.uniformBufferProvider?.currentBuffer(index: bufferSyncState) {
+                commandEncoder.setFragmentBuffer(uniformBuffer.metalBuffer, offset: bufferParams.fragmentOffset, at: 2)
             }
-            for (index, texture) in bufferParams.textures.enumerate() {
-                commandEncoder.setFragmentTexture(texture.metalTexture, atIndex: index)
-                commandEncoder.setFragmentSamplerState(texture.sampler.state, atIndex: index)
+            for (index, texture) in bufferParams.textures.enumerated() {
+                commandEncoder.setFragmentTexture(texture.metalTexture, at: index)
+                commandEncoder.setFragmentSamplerState(texture.sampler.state, at: index)
             }
             
             commandEncoder.drawIndexedPrimitives(primitiveType, indexCount: indexCount, indexType: indexType, indexBuffer: indexBuffer.metalBuffer, indexBufferOffset: 0)
@@ -431,7 +431,7 @@ class Context {
     }
     
     func endFrame () {
-        _commandBuffer.presentDrawable(_drawable)
+        _commandBuffer.present(_drawable)
         _commandBuffer.commit()
         
         _drawable = nil

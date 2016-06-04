@@ -307,7 +307,7 @@ public struct Cartesian2 {
     * @returns {Number} The angle between the Cartesians.
     */
     func angleBetween(other: Cartesian2) -> Double {
-        return Math.acosClamped(value: normalize().dot(other: other.normalize()))
+        return Math.acosClamped(normalize().dot(other: other.normalize()))
     }
     
     /**

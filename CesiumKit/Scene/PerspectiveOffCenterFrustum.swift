@@ -30,42 +30,42 @@
 // FIXME: Struct
 class PerspectiveOffCenterFrustum: Frustum {
     
-    var fov = Double.NaN
-    var fovy = Double.NaN
+    var fov = Double.nan
+    var fovy = Double.nan
 
-    var aspectRatio = Double.NaN
+    var aspectRatio = Double.nan
 
     /**
     * Defines the left clipping plane.
     * @type {Number}
     * @default undefined
     */
-    var left = Double.NaN
-    private var _left = Double.NaN
+    var left = Double.nan
+    private var _left = Double.nan
     
     /**
     * Defines the right clipping plane.
     * @type {Number}
     * @default undefined
     */
-    var right = Double.NaN
-    private var _right = Double.NaN
+    var right = Double.nan
+    private var _right = Double.nan
     
     /**
     * Defines the top clipping plane.
     * @type {Number}
     * @default undefined
     */
-    var top = Double.NaN
-    private var _top = Double.NaN
+    var top = Double.nan
+    private var _top = Double.nan
     
     /**
     * Defines the bottom clipping plane.
     * @type {Number}
     * @default undefined
     */
-    var bottom = Double.NaN
-    private var _bottom = Double.NaN
+    var bottom = Double.nan
+    private var _bottom = Double.nan
     
     /**
     * The distance of the near plane.
@@ -74,7 +74,7 @@ class PerspectiveOffCenterFrustum: Frustum {
     */
     var near = 1.0
     
-    private var _near = Double.NaN
+    private var _near = Double.nan
     
     /**
     * The distance of the far plane.
@@ -83,7 +83,7 @@ class PerspectiveOffCenterFrustum: Frustum {
     */
     var far = 500000000.0
     
-    private var _far = Double.NaN
+    private var _far = Double.nan
     
     private var _cullingVolume = CullingVolume()
 
@@ -153,26 +153,46 @@ class PerspectiveOffCenterFrustum: Frustum {
         
         let right2 = direction.cross(up)
         
-        let nearCenter = direction.multiplyByScalar(near).add(position)
+        let nearCenter = direction.multiply(scalar: near).add(position)
         
-        let farCenter = direction.multiplyByScalar(far).add(position)
+        let farCenter = direction.multiply(scalar: far).add(position)
         
         var planes = [Cartesian4]()
         
         //Left plane computation
-        let leftPlane = right2.multiplyByScalar(left).add(nearCenter).subtract(position).normalize().cross(up)
+        let leftPlane = right2
+            .multiply(scalar: left)
+            .add(nearCenter)
+            .subtract(position)
+            .normalize()
+            .cross(up)
         planes.append(Cartesian4(x: leftPlane.x, y: leftPlane.y, z: leftPlane.z, w: -leftPlane.dot(position)))
         
         //Right plane computation
-        let rightPlane = up.cross(right2.multiplyByScalar(right).add(nearCenter).subtract(position).normalize())
+        let rightPlane = up.cross(
+            right2.multiply(scalar: right)
+                .add(nearCenter)
+                .subtract(position)
+                .normalize()
+        )
         planes.append(Cartesian4(x: rightPlane.x, y: rightPlane.y, z: rightPlane.z, w: -rightPlane.dot(position)))
         
         //Bottom plane computation
-        let bottomPlane = right2.cross(up.multiplyByScalar(bottom).add(nearCenter).subtract(position).normalize())
+        let bottomPlane = right2.cross(
+            up.multiply(scalar: bottom)
+                .add(nearCenter)
+                .subtract(position)
+                .normalize()
+        )
         planes.append(Cartesian4(x: bottomPlane.x, y: bottomPlane.y, z: bottomPlane.z, w: -bottomPlane.dot(position)))
         
         //Top plane computation
-        let topPlane = up.multiplyByScalar(top).add(nearCenter).subtract(position).normalize().cross(right2)
+        let topPlane = up
+            .multiply(scalar: top)
+            .add(nearCenter)
+            .subtract(position)
+            .normalize()
+            .cross(right2)
         planes.append(Cartesian4(x: topPlane.x, y: topPlane.y, z: topPlane.z, w: -topPlane.dot(position)))
         
         //Near plane computation

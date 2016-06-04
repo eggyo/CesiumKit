@@ -348,7 +348,7 @@ public class BingMapsImageryProvider: ImageryProvider {
         mapStyle = options.mapStyle
         culture = options.culture
         
-        _key = BingMapsAPI.getKey(options.key)
+        _key = BingMapsAPI.getKey(key: options.key)
         
         _url = options.url
         
@@ -379,20 +379,21 @@ public class BingMapsImageryProvider: ImageryProvider {
         let metadataSuccess = { (data: NSData) -> () in
             
             do {
-                let metadata = try JSON.decode(data, strict: true)
+                let metadataString = String(data: data, encoding: NSUTF8StringEncoding)!
+                let metadata = try JSON.decode(string: metadataString, strict: true)
                 
-                let resource = try metadata.getArray("resourceSets")[0].getArray("resources")[0]
-                self._tileWidth = try resource.getInt("imageWidth")
-                self._tileHeight = try resource.getInt("imageHeight")
-                self._maximumLevel = try resource.getInt("zoomMax") - 1
-                self._imageUrlSubdomains = try resource.getArray("imageUrlSubdomains")
+                let resource = try metadata.getArray(key: "resourceSets")[0].getArray(key: "resources")[0]
+                self._tileWidth = try resource.getInt(key: "imageWidth")
+                self._tileHeight = try resource.getInt(key: "imageHeight")
+                self._maximumLevel = try resource.getInt(key: "zoomMax") - 1
+                self._imageUrlSubdomains = try resource.getArray(key: "imageUrlSubdomains")
                 
                  let imageUrlTemplate = try resource
-                    .getString("imageUrl")
-                    .replace("{culture}", self.culture)
+                    .getString(key: "imageUrl")
+                    .replace(existingString: "{culture}", self.culture)
                  
                  // Force HTTPS
-                 self._imageUrlTemplate = imageUrlTemplate.replace("http://", "https://")
+                 self._imageUrlTemplate = imageUrlTemplate.replace(existingString: "http://", "https://")
                  
                  
                  // Install the default tile discard policy if none has been supplied.
@@ -507,7 +508,7 @@ public class BingMapsImageryProvider: ImageryProvider {
     public func requestImage(x x: Int, y: Int, level: Int, completionBlock: (CGImage? -> Void)) {
         assert(_ready, "requestImage must not be called before the imagery provider is ready.")
         let url = buildImageUrl(x: x, y: y, level: level)
-        loadImage(url, completionBlock: completionBlock)
+        loadImage(url: url, completionBlock: completionBlock)
         
     }
 
@@ -607,7 +608,7 @@ public class BingMapsImageryProvider: ImageryProvider {
         
         var quadkey = ""
         
-        for i in level.stride(through: 0, by: -1) {
+        for i in stride(from: level, through: 0, by: -1) {
             let bitmask = 1 << i
             var digit = 0
             
@@ -660,10 +661,10 @@ public class BingMapsImageryProvider: ImageryProvider {
         var imageUrl = _imageUrlTemplate! // _ready already checked
         
         let quadkey = tileXYToQuadKey(x: x, y: y, level: level)
-        imageUrl = imageUrl.replace("{quadkey}", quadkey)
+        imageUrl = imageUrl.replace(existingString: "{quadkey}", quadkey)
         
         let subdomainIndex = (x + y + level) % _imageUrlSubdomains!.count
-        imageUrl = imageUrl.replace("{subdomain}", _imageUrlSubdomains![subdomainIndex].string!)
+        imageUrl = imageUrl.replace(existingString: "{subdomain}", _imageUrlSubdomains![subdomainIndex].string!)
         
         // FIXME: proxy
         /*var proxy = imageryProvider._proxy;

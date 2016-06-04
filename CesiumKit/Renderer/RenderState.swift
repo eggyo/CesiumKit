@@ -167,16 +167,16 @@ struct RenderState/*: Printable*/ {
         var mask: Int = 0
         
         struct FrontOperation {
-            var fail: MTLStencilOperation = .Keep
-            var zFail: MTLStencilOperation = .Keep
-            var zPass: MTLStencilOperation = .Keep
+            var fail: MTLStencilOperation = .keep
+            var zFail: MTLStencilOperation = .keep
+            var zPass: MTLStencilOperation = .keep
         }
         let frontOperation = FrontOperation()
         
         struct BackOperation {
-            var fail: MTLStencilOperation = .Keep
-            var zFail: MTLStencilOperation = .Keep
-            var zPass: MTLStencilOperation = .Keep
+            var fail: MTLStencilOperation = .keep
+            var zFail: MTLStencilOperation = .keep
+            var zPass: MTLStencilOperation = .keep
         }
         let backOperation = BackOperation()
     }
@@ -197,8 +197,8 @@ struct RenderState/*: Printable*/ {
     
     init(
         device: MTLDevice,
-        windingOrder: WindingOrder = WindingOrder.CounterClockwise,
-        cullFace: CullFace = .None, // default cull disabled
+        windingOrder: WindingOrder = .counterClockwise,
+        cullFace: CullFace = .none, // default cull disabled
         polygonOffset: PolygonOffset = PolygonOffset(),
         lineWidth: Double = 1.0,
         scissorTest: ScissorTest = ScissorTest(),
@@ -206,7 +206,7 @@ struct RenderState/*: Printable*/ {
         depthTest: DepthTest = DepthTest(),
         depthMask: Bool = true,
         stencilMask: Int = ~0,
-        blending: BlendingState = BlendingState.Disabled(),
+        blending: BlendingState = .disabled(),
         stencilTest: RenderState.StencilTest = StencilTest(),
         sampleCoverage: RenderState.SampleCoverage = SampleCoverage(),
         viewport: Cartesian4? = nil,
@@ -286,9 +286,9 @@ struct RenderState/*: Printable*/ {
 
             if self.depthTest.enabled {
                 depthStencilDescriptor.depthCompareFunction = depthTest.function.toMetal()
-                depthStencilDescriptor.depthWriteEnabled = true
+                depthStencilDescriptor.isDepthWriteEnabled = true
             }
-            _depthStencilState = device.newDepthStencilStateWithDescriptor(depthStencilDescriptor)
+            _depthStencilState = device.newDepthStencilState(with: depthStencilDescriptor)
     }
     
     /*func validate() {
@@ -405,7 +405,7 @@ struct RenderState/*: Printable*/ {
     }*/
     
     func applyWindingOrder(encoder: MTLRenderCommandEncoder) {
-        encoder.setFrontFacingWinding(windingOrder.toMetal())
+        encoder.setFrontFacing(windingOrder.toMetal())
     }
     
     func applyCullFace(encoder: MTLRenderCommandEncoder) {
@@ -522,27 +522,27 @@ struct RenderState/*: Printable*/ {
     
     func applyWireFrame(encoder: MTLRenderCommandEncoder) {
         if wireFrame {
-            encoder.setTriangleFillMode(.Lines)
+            encoder.setTriangleFillMode(.lines)
         } else {
-            encoder.setTriangleFillMode(.Fill)
+            encoder.setTriangleFillMode(.fill)
         }
     }
     
     func apply(encoder: MTLRenderCommandEncoder, passState: PassState) {
-        applyWindingOrder(encoder)
-        applyCullFace(encoder)
+        applyWindingOrder(encoder: encoder)
+        applyCullFace(encoder: encoder)
         /*applyLineWidth()
         applyPolygonOffset()
         applyDepthRange()*/
-        applyDepthTest(encoder)
+        applyDepthTest(encoder: encoder)
         /*applyDepthMask()
         applyStencilMask()
         applySampleCoverage()
         applyScissorTest(passState)
         applyBlending(passState)
         applyStencilTest()*/
-        applyViewport(encoder, passState: passState)
-        applyWireFrame(encoder)
+        applyViewport(encoder: encoder, passState: passState)
+        applyWireFrame(encoder: encoder)
     }
     
 /*

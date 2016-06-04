@@ -139,7 +139,7 @@ class GlobeSurfaceShaderSet {
                 }
                 textureArrayDefines += "uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];\nuniform float u_dayTextureAlpha[TEXTURE_UNITS];\nuniform float u_dayTextureBrightness[TEXTURE_UNITS];\nuniform float u_dayTextureContrast[TEXTURE_UNITS];\nuniform float u_dayTextureHue[TEXTURE_UNITS];\nuniform float u_dayTextureSaturation[TEXTURE_UNITS];\nuniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];\nuniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];\n"
                 
-                fs.sources.insert(textureArrayDefines, atIndex: 0)
+                fs.sources.insert(textureArrayDefines, at: 0)
             }
             
             if applyBrightness {
@@ -213,8 +213,8 @@ class GlobeSurfaceShaderSet {
  
             fs.sources.append(computeDayColor)
  
-            vs.sources.append(getPositionMode(sceneMode))
-            vs.sources.append(get2DYPositionFraction(useWebMercatorProjection))
+            vs.sources.append(getPositionMode(sceneMode: sceneMode))
+            vs.sources.append(get2DYPositionFraction(useWebMercatorProjection: useWebMercatorProjection))
             
             let pipeline = RenderPipeline.fromCache(
                 context: frameState.context,
@@ -250,8 +250,8 @@ class GlobeSurfaceShaderSet {
         if pickShader == nil {
             var vs = baseVertexShaderSource
             vs.defines.append(quantizationDefine)
-            vs.sources.append(getPositionMode(sceneMode))
-            vs.sources.append(get2DYPositionFraction(useWebMercatorProjection))
+            vs.sources.append(getPositionMode(sceneMode: sceneMode))
+            vs.sources.append(get2DYPositionFraction(useWebMercatorProjection: useWebMercatorProjection))
             
             // pass through fragment shader. only depth is rendered for the globe on a pick pass
             let fs = ShaderSource(sources: [

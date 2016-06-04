@@ -395,7 +395,7 @@ public struct Matrix3 {
     *
     * @exception {DeveloperError} index must be 0, 1, or 2.
     */
-    func column (index: Int) -> Cartesian3 {
+    func column (_ index: Int) -> Cartesian3 {
         assert(index >= 0 && index <= 2, "index must be 0, 1, or 2.")
         return Cartesian3(simd: simdType[index])
     }
@@ -600,8 +600,8 @@ public struct Matrix3 {
     * @param {Cartesian3} result The object onto which to store the result.
     * @returns {Cartesian3} The modified result parameter.
     */
-    public func multiplyByVector (cartesian: Cartesian3) -> Cartesian3 {
-        return Cartesian3(simd: simdType * cartesian.simdType)
+    public func multiply (vector: Cartesian3) -> Cartesian3 {
+        return Cartesian3(simd: simdType * vector.simdType)
     }
     /*
     /**

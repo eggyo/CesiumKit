@@ -478,7 +478,7 @@ public class ScreenSpaceEventHandler {
         if (numberOfTouches != 1 && _buttonDown == MouseButton.Left) {
             // transitioning from single touch, trigger UP and might trigger CLICK
             _buttonDown = nil
-            action = getInputAction(.LeftUp, modifier: modifier)
+            action = getInputAction(type: .LeftUp, modifier: modifier)
             
             if action != nil {
                 action!(geometry: TouchEndEventGeometry(position: _primaryPosition))
@@ -510,7 +510,7 @@ public class ScreenSpaceEventHandler {
             // transitioning from pinch, trigger PINCH_END
             _isPinching = false
             
-            if let action = getInputAction(.PinchEnd, modifier: modifier) {
+            if let action = getInputAction(type: .PinchEnd, modifier: modifier) {
                 action(geometry: TouchEndEventGeometry(position: _primaryPosition))
             }
         }
@@ -524,7 +524,7 @@ public class ScreenSpaceEventHandler {
                 _primaryStartPosition = position
                 _primaryPreviousPosition = position
                 
-                action = getInputAction(ScreenSpaceEventType.LeftDown, modifier: modifier)
+                action = getInputAction(type: ScreenSpaceEventType.LeftDown, modifier: modifier)
                 
                 if action != nil {
                     action!(geometry: TouchStartEventGeometry(position: position))
@@ -536,7 +536,7 @@ public class ScreenSpaceEventHandler {
             // transitioning to pinch, trigger PINCH_START
             _isPinching = true
             
-            action = getInputAction(.PinchStart, modifier: modifier)
+            action = getInputAction(type: .PinchStart, modifier: modifier)
             
             if action != nil {
                 action!(geometry: Touch2StartEventGeometry(position1: _positions[0]!, position2: _positions[1]!))
@@ -559,7 +559,7 @@ public class ScreenSpaceEventHandler {
                 _primaryPosition = position
                 let previousPosition = _primaryPreviousPosition
                 
-                action = getInputAction(.MouseMove, modifier: modifier)
+                action = getInputAction(type: .MouseMove, modifier: modifier)
                 
                 if action != nil {
                     action!(geometry: TouchMoveEventGeometry(
@@ -573,7 +573,7 @@ public class ScreenSpaceEventHandler {
         } else if numberOfTouches == 2 && _isPinching {
             // moving pinch
             
-            action = getInputAction(.PinchMove, modifier: modifier)
+            action = getInputAction(type: .PinchMove, modifier: modifier)
             if action != nil {
                 let position1 = _positions[0]!
                 let position2 = _positions[1]!
@@ -654,7 +654,7 @@ public class ScreenSpaceEventHandler {
     * @see ScreenSpaceEventHandler#removeInputAction
     */
     func  setInputAction (type: ScreenSpaceEventType, modifier: KeyboardEventModifier?, action: EventAction) {
-        let key = getInputEventKey(type, modifier: modifier)
+        let key = getInputEventKey(type: type, modifier: modifier)
         _inputEvents[key] = action
     }
     
@@ -670,7 +670,7 @@ public class ScreenSpaceEventHandler {
     */
     func getInputAction (type: ScreenSpaceEventType, modifier: KeyboardEventModifier?) -> EventAction? {
         
-        let key = getInputEventKey(type, modifier: modifier)
+        let key = getInputEventKey(type: type, modifier: modifier)
         return _inputEvents[key]
     }
     /*

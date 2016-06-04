@@ -765,7 +765,7 @@ class UniformState {
         _inverseViewRotation = matrix.rotation
     }
     
-    func setCamera(camera: Camera) {
+    func setCamera(_ camera: Camera) {
         _cameraPosition = camera.positionWC
         _cameraDirection = camera.directionWC
         _cameraRight = camera.rightWC
@@ -778,17 +778,17 @@ class UniformState {
     func setSunAndMoonDirections(frameState: FrameState) {
 
         var transformMatrix = Matrix3()
-        if Transforms.computeIcrfToFixedMatrix(frameState.time) == nil {
-            transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time)
+        if Transforms.computeIcrfToFixedMatrix(date: frameState.time) == nil {
+            transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(date: frameState.time)
         }
         
-        _sunPositionWC = transformMatrix.multiplyByVector(Simon1994PlanetaryPositions.sharedInstance.computeSunPositionInEarthInertialFrame(frameState.time))
+        _sunPositionWC = transformMatrix.multiply(vector: Simon1994PlanetaryPositions.sharedInstance.computeSunPositionInEarthInertialFrame(date: frameState.time))
         
         _sunDirectionWC = _sunPositionWC.normalize()
         
-        _sunDirectionEC = viewRotation3D.multiplyByVector(_sunPositionWC).normalize()
+        _sunDirectionEC = viewRotation3D.multiply(vector: _sunPositionWC).normalize()
         
-        _moonDirectionEC = transformMatrix.multiplyByVector(Simon1994PlanetaryPositions.sharedInstance.computeMoonPositionInEarthInertialFrame(frameState.time)).normalize()
+        _moonDirectionEC = transformMatrix.multiply(vector: Simon1994PlanetaryPositions.sharedInstance.computeMoonPositionInEarthInertialFrame(date: frameState.time)).normalize()
         //_moonDirectionEC = position
         /*Matrix3.multiplyByVector(transformMatrix, position, position);
         Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
@@ -800,7 +800,7 @@ class UniformState {
         projection.project(sunCartographic, uniformState._sunPositionColumbusView)*/
     }
     
-    func updatePass (pass: Pass) {
+    func updatePass (_ pass: Pass) {
         _pass = pass
     }
     
@@ -811,7 +811,7 @@ class UniformState {
     *
     * @param {Object} frustum The frustum to synchronize with.
     */
-    func updateFrustum (frustum: Frustum) {
+    func updateFrustum (_ frustum: Frustum) {
         var frustum = frustum
         projection = frustum.projectionMatrix
         if frustum.infiniteProjectionMatrix != nil {
@@ -820,7 +820,7 @@ class UniformState {
         _currentFrustum.x = frustum.near
         _currentFrustum.y = frustum.far
     
-        if frustum.top != Double.NaN {
+        if frustum.top != Double.nan {
             frustum = (frustum as! PerspectiveFrustum)._offCenterFrustum
         }
         
@@ -845,8 +845,8 @@ class UniformState {
 
         let camera = frameState.camera!
         
-        setView(camera.viewMatrix)
-        setInverseView(camera.inverseViewMatrix)
+        setView(matrix: camera.viewMatrix)
+        setInverseView(matrix: camera.inverseViewMatrix)
         setCamera(camera)
         
         if self.frameState.mode == SceneMode.Scene2D {
@@ -860,7 +860,7 @@ class UniformState {
         }
         
         //FIXME: setSunAndMoonDirections
-        setSunAndMoonDirections(self.frameState)
+        setSunAndMoonDirections(frameState: self.frameState)
         
         _entireFrustum.x = camera.frustum.near
         _entireFrustum.y = camera.frustum.far
@@ -868,7 +868,7 @@ class UniformState {
         
         _fogDensity = Float(frameState.fog.density)
         
-        _temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(self.frameState.time!)
+        _temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(date: self.frameState.time!)
     }
     
     func setAutomaticUniforms (buffer: Buffer) {
@@ -912,7 +912,7 @@ class UniformState {
     func cleanViewport() {
         if _viewportDirty {
             _viewportOrthographicMatrix = Matrix4.computeOrthographicOffCenter(left: _viewport.x, right: _viewport.x + _viewport.width, bottom: _viewport.y, top: _viewport.y + _viewport.height)
-            _viewportTransformation = Matrix4.computeViewportTransformation(_viewport)
+            _viewportTransformation = Matrix4.computeViewportTransformation(viewport: _viewport)
             _viewportDirty = false
         }
     }
@@ -1108,18 +1108,18 @@ class UniformState {
         // In 2D and Columbus View, the camera can travel outside the projection, and when it does so
         // there's not really any corresponding location in the real world.  So clamp the unprojected
         // longitude and latitude to their valid ranges.
-        var cartographic = projection.unproject(p)
+        var cartographic = projection.unproject(cartesian: p)
         cartographic.longitude = Math.clamp(cartographic.longitude, min: -M_PI, max: M_PI)
         cartographic.latitude = Math.clamp(cartographic.latitude, min: -M_PI_2, max: M_PI_2)
         let position3D = projection.ellipsoid.cartographicToCartesian(cartographic)
         
         // Compute the rotation from the local ENU at the real world camera position to the fixed axes.
-        let enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid: projection.ellipsoid)
+        let enuToFixed = Transforms.eastNorthUpToFixedFrame(origin: position3D, ellipsoid: projection.ellipsoid)
         
         // Transform each camera direction to the fixed axes.
-        r = enuToFixed.multiplyByPointAsVector(r)
-        u = enuToFixed.multiplyByPointAsVector(u)
-        d = enuToFixed.multiplyByPointAsVector(d)
+        r = enuToFixed.multiply(pointAsVector: r)
+        u = enuToFixed.multiply(pointAsVector: u)
+        d = enuToFixed.multiply(pointAsVector: d)
         
         // Compute the view matrix based on the new fixed-frame camera position and directions.
         return Matrix4(
@@ -1134,7 +1134,7 @@ class UniformState {
             if _mode == .Scene3D {
                 _view3D = _view
             } else {
-                _view3D = view2Dto3D(_cameraPosition, direction2D: _cameraDirection, right2D: _cameraRight, up2D: _cameraUp, frustum2DWidth: _frustum2DWidth, mode: _mode!, projection: _mapProjection!)
+                _view3D = view2Dto3D(position2D: _cameraPosition, direction2D: _cameraDirection, right2D: _cameraRight, up2D: _cameraUp, frustum2DWidth: _frustum2DWidth, mode: _mode!, projection: _mapProjection!)
             }
             _viewRotation3D = _view3D.rotation
             _view3DDirty = false

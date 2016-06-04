@@ -266,12 +266,12 @@ public class CesiumGlobe {
         if options.skyBox {
             scene.skyBox = SkyBox(
                 sources: [
-                    SkyBox.getDefaultSkyBoxUrl("px"),
-                    SkyBox.getDefaultSkyBoxUrl("mx"),
-                    SkyBox.getDefaultSkyBoxUrl("py"),
-                    SkyBox.getDefaultSkyBoxUrl("my"),
-                    SkyBox.getDefaultSkyBoxUrl("pz"),
-                    SkyBox.getDefaultSkyBoxUrl("mz")
+                    SkyBox.getDefaultSkyBoxUrl(face: "px"),
+                    SkyBox.getDefaultSkyBoxUrl(face: "mx"),
+                    SkyBox.getDefaultSkyBoxUrl(face: "py"),
+                    SkyBox.getDefaultSkyBoxUrl(face: "my"),
+                    SkyBox.getDefaultSkyBoxUrl(face: "pz"),
+                    SkyBox.getDefaultSkyBoxUrl(face: "mz")
                 ]
             )
         }
@@ -283,7 +283,7 @@ public class CesiumGlobe {
         scene.moon = new Moon();*/
 
         if options.imageryProvider != nil {
-            scene.imageryLayers.addImageryProvider(options.imageryProvider!, index: nil)
+            scene.imageryLayers.addImageryProvider(imageryProvider: options.imageryProvider!, index: nil)
         }
         
         //Set the terrain provider
@@ -300,12 +300,12 @@ public class CesiumGlobe {
         self.scene3DOnly = options.scene3DOnly
         
         if self.sceneMode == SceneMode.Scene2D {
-            self.scene.morphTo2D(0)
+            self.scene.morphTo2D(duration: 0)
         }
         if self.sceneMode == SceneMode.ColumbusView {
-            self.scene.morphToColumbusView(0)
+            self.scene.morphToColumbusView(duration: 0)
         }
-        configureCanvasSize(Cartesian2(x: Double(view.drawableSize.width), y: Double(view.drawableSize.height)))
+        configureCanvasSize(size: Cartesian2(x: Double(view.drawableSize.width), y: Double(view.drawableSize.height)))
         configureCameraFrustum()
 
         // FIXME: Render errors
@@ -335,7 +335,7 @@ public class CesiumGlobe {
 
     func configureCanvasSize(size: Cartesian2) {
         
-        scene.resize(size)
+        scene.resize(size: size)
         _canRender = scene.drawableWidth != 0 && scene.drawableHeight != 0
         
     }
@@ -345,7 +345,7 @@ public class CesiumGlobe {
         let width = scene.drawableWidth
         let height = scene.drawableHeight
         if width != 0 && height != 0 {
-            if scene.camera.frustum.aspectRatio != Double.NaN {
+            if scene.camera.frustum.aspectRatio != Double.nan {
                 scene.camera.frustum.aspectRatio = Double(width) / Double(height)
             } else {
                 scene.camera.frustum.top = scene.camera.frustum.right * (Double(height) / Double(width))
@@ -460,7 +460,7 @@ var cesiumLogoData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHYAAAAaCAYA
         if scene.drawableWidth == Int(size.x) && scene.drawableHeight == Int(size.y) {
             return
         }
-        configureCanvasSize(size)
+        configureCanvasSize(size: size)
         configureCameraFrustum()
     }
     /**
@@ -470,11 +470,11 @@ var cesiumLogoData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHYAAAAaCAYA
     public func render(size: CGSize) {
         
         updateFramerate()
-        resize(Cartesian2(x: Double(size.width), y: Double(size.height)))
+        resize(size: Cartesian2(x: Double(size.width), y: Double(size.height)))
         scene.initializeFrame()
         let currentTime = clock.tick()
         if _canRender {
-            scene.render(currentTime)
+            scene.render(time: currentTime)
         }
     }
     
@@ -485,8 +485,8 @@ var cesiumLogoData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHYAAAAaCAYA
     func updateFramerate () {
         let currentTime = NSDate()
         
-        let elapsed = currentTime.timeIntervalSinceDate(_lastRenderTime)
-        let updateElapsed = currentTime.timeIntervalSinceDate(_lastUpdateTime)
+        let elapsed = currentTime.timeIntervalSince(_lastRenderTime)
+        let updateElapsed = currentTime.timeIntervalSince(_lastUpdateTime)
         _lastRenderTime = currentTime
         
         let fps = 1.0 / elapsed

@@ -14,11 +14,11 @@ protocol BoundingVolume {
     
     var center: Cartesian3 { get }
     
-    func intersectPlane(plane: Plane) -> Intersect
+    func intersect (plane: Plane) -> Intersect
     
     func isOccluded (occluder: Occluder) -> Bool
     
-    func distanceSquaredTo(cartesian: Cartesian3) -> Double
+    func distanceSquaredTo (cartesian: Cartesian3) -> Double
     
     func computePlaneDistances(position: Cartesian3, direction: Cartesian3) -> Interval 
 

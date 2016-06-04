@@ -109,7 +109,7 @@ public struct Quaternion {
         else {
             // |w| <= 1/2
             var next = [1, 2, 0]
-            var quat = Array(count: 3, repeatedValue: 0.0)
+            var quat = Array(repeating: 0.0, count: 3)
             
             var i = 0
             if (m11 > m00) {
@@ -374,7 +374,7 @@ public struct Quaternion {
     
     public func inverse () -> Quaternion {
         let result = conjugate()
-        return result.multiplyByScalar(1.0 / magnitudeSquared)
+        return result.multiply(scalar: 1.0 / magnitudeSquared)
     }
     /*
     /**
@@ -520,7 +520,7 @@ public struct Quaternion {
     * @param {Quaternion} [result] The object onto which to store the result.
     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
     */
-    func multiplyBy (scalar: Double) -> Quaternion {
+    func multiply (scalar: Double) -> Quaternion {
         return Quaternion(x: x * scalar, y: y * scalar, z: z * scalar, w: w * scalar)
     }
     

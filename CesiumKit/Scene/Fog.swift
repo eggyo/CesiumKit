@@ -123,7 +123,7 @@ class Fog {
         }
         
         let height = positionCartographic.height
-        let i = findInterval(height)
+        let i = findInterval(height: height)
         let t = Math.clamp((height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]), min: 0.0, max: 1.0)
         var density = Math.lerp(p: densityTable[i], q: densityTable[i + 1], time: t)
         

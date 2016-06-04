@@ -295,7 +295,7 @@ public class ScreenSpaceCameraController {
     }
     
     func sameMousePosition(movement: StartEndPosition) -> Bool {
-        return movement.startPosition.equalsEpsilon(movement.endPosition, relativeEpsilon: Math.Epsilon5)
+        return movement.startPosition.equalsEpsilon(other: movement.endPosition, relativeEpsilon: Math.Epsilon5)
     }
     
     // If the time between mouse down and mouse up is not between
@@ -313,8 +313,8 @@ public class ScreenSpaceCameraController {
         }
         let movementState = state!
         
-        let ts = _aggregator.getButtonPressTime(type, modifier: modifier)
-        let tr = _aggregator.getButtonReleaseTime(type, modifier: modifier)
+        let ts = _aggregator.getButtonPressTime(type: type, modifier: modifier)
+        let tr = _aggregator.getButtonReleaseTime(type: type, modifier: modifier)
         
         if let ts = ts, tr = tr {
             let threshold = tr.timeIntervalSinceReferenceDate - ts.timeIntervalSinceReferenceDate
@@ -322,10 +322,10 @@ public class ScreenSpaceCameraController {
             let fromNow = now.timeIntervalSinceReferenceDate - tr.timeIntervalSinceReferenceDate
             
             if threshold < inertiaMaxClickTimeThreshold {
-                let d = decay(fromNow, coefficient: decayCoef)
+                let d = decay(time: fromNow, coefficient: decayCoef)
                 if !movementState.active {
-                    let lastMovement = _aggregator.getLastMovement(type, modifier: modifier)
-                    if lastMovement == nil || sameMousePosition(lastMovement!) {
+                    let lastMovement = _aggregator.getLastMovement(type: type, modifier: modifier)
+                    if lastMovement == nil || sameMousePosition(movement: lastMovement!) {
                         return
                     }
                     
@@ -334,25 +334,25 @@ public class ScreenSpaceCameraController {
                     
                     movementState.startPosition = lastMovement!.startPosition
                     
-                    movementState.endPosition = movementState.startPosition.add(movementState.motion.multiplyByScalar(d))
+                    movementState.endPosition = movementState.startPosition.add(other: movementState.motion.multiplyByScalar(scalar: d))
                     
                     movementState.active = true
                 } else {
                     movementState.startPosition = movementState.endPosition
-                    movementState.endPosition = movementState.startPosition.add(movementState.motion.multiplyByScalar(d))
+                    movementState.endPosition = movementState.startPosition.add(other: movementState.motion.multiplyByScalar(scalar: d))
                     
                     movementState.motion = Cartesian2.zero
                 }
                 
                 // If value from the decreasing exponential function is close to zero,
                 // the end coordinates may be NaN.
-                if (movementState.endPosition.x == Double.NaN || movementState.endPosition.y == Double.NaN) || sameMousePosition(movementState) {
+                if (movementState.endPosition.x == Double.nan || movementState.endPosition.y == Double.nan) || sameMousePosition(movement: movementState) {
                     movementState.active = false
                     return
                 }
                 
-                if !_aggregator.isButtonDown(type, modifier: modifier) {
-                    let startPosition = _aggregator.getStartMousePosition(type, modifier: modifier)
+                if !_aggregator.isButtonDown(type: type, modifier: modifier) {
+                    let startPosition = _aggregator.getStartMousePosition(type: type, modifier: modifier)
                     action(
                         startPosition: startPosition,
                         movement: MouseMovement(
@@ -380,10 +380,10 @@ public class ScreenSpaceCameraController {
             let type = eventType.type
             let modifier = eventType.modifier
             
-            if _aggregator.isMoving(type, modifier: modifier) {
-                movement = _aggregator.getMovement(type, modifier: modifier)
+            if _aggregator.isMoving(type: type, modifier: modifier) {
+                movement = _aggregator.getMovement(type: type, modifier: modifier)
             }
-            let startPosition = _aggregator.getStartMousePosition(type, modifier: modifier)
+            let startPosition = _aggregator.getStartMousePosition(type: type, modifier: modifier)
             
             if enableInputs && enabled {
                 if movement != nil {
@@ -442,13 +442,13 @@ public class ScreenSpaceCameraController {
         
         let pickedPosition: Cartesian3?
         if _globe != nil {
-            pickedPosition = mode != .Scene2D ? pickGlobe(startPosition) : camera.getPickRay(startPosition).origin
+            pickedPosition = mode != .Scene2D ? pickGlobe(mousePosition: startPosition) : camera.getPickRay(windowPosition: startPosition).origin
         } else {
             pickedPosition = nil
         }
         
         if pickedPosition == nil {
-            camera.zoomIn(distance)
+            camera.zoomIn(amount: distance)
             return
         }
         
@@ -475,7 +475,7 @@ public class ScreenSpaceCameraController {
                     let direction = worldPosition.subtract(endPosition).normalize()
                     
                     let d = worldPosition.distance(endPosition) * distance / (camera.getMagnitude() * 0.5)
-                    camera.move(direction, amount: d * 0.5)
+                    camera.move(direction: direction, amount: d * 0.5)
                     
                     // FIXME: savedX
                     /*if (camera.position.x < 0.0 && savedX > 0.0) || (camera.position.x > 0.0 && savedX < 0.0) {
@@ -490,7 +490,7 @@ public class ScreenSpaceCameraController {
                 } else {
 
                     let centerPixel = Cartesian2(x: Double(_scene.drawableWidth) / 2.0, y: Double(_scene.drawableHeight) / 2.0)
-                    let centerPosition = pickGlobe(centerPixel)
+                    let centerPosition = pickGlobe(mousePosition: centerPixel)
                     if centerPosition != nil {
                         let positionNormal = centerPosition!.normalize()
                         let pickedNormal = _zoomWorldPosition.normalize()
@@ -500,9 +500,9 @@ public class ScreenSpaceCameraController {
                             let angle = Math.acosClamped(dotProduct)
                             let axis = pickedNormal.cross(positionNormal)
                             
-                            let denom = abs(angle) > Math.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance
+                            let denom = abs(angle) > Math.toRadians(degrees: 20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance
                             let scalar = distance / denom;
-                            camera.rotate(axis, angle: angle * scalar)
+                            camera.rotate(axis: axis, angle: angle * scalar)
                         }
                     } else {
                         zoomOnVector = true
@@ -515,12 +515,12 @@ public class ScreenSpaceCameraController {
         
         if (!sameStartPosition && zoomOnVector) || zoomingOnVector {
 
-            let zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(_scene, position: _zoomWorldPosition)
+            let zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(scene: _scene, position: _zoomWorldPosition)
             let ray: Ray
             if mode != .ColumbusView && startPosition == _zoomMouseStart && zoomMouseStart != nil {
-                ray = camera.getPickRay(zoomMouseStart!)
+                ray = camera.getPickRay(windowPosition: zoomMouseStart!)
             } else {
-                ray = camera.getPickRay(startPosition)
+                ray = camera.getPickRay(windowPosition: startPosition)
             }
             
             var rayDirection = ray.direction
@@ -528,11 +528,11 @@ public class ScreenSpaceCameraController {
                 rayDirection = Cartesian3(x: rayDirection.y, y: rayDirection.z, z: rayDirection.x)
             }
             
-            camera.move(rayDirection, amount: distance)
+            camera.move(direction: rayDirection, amount: distance)
             
             _zoomingOnVector = true
         } else {
-            camera.zoomIn(distance)
+            camera.zoomIn(amount: distance)
         }
     }
     
@@ -589,11 +589,11 @@ public class ScreenSpaceCameraController {
         
         var depthIntersection: Cartesian3?
         if _scene.pickPositionSupported {
-            depthIntersection = _scene.pickPosition(mousePosition)
+            depthIntersection = _scene.pickPosition(windowPosition: mousePosition)
         }
         
-        let ray = camera.getPickRay(mousePosition)
-        let rayIntersection = _globe!.pick(ray, scene: _scene)
+        let ray = camera.getPickRay(windowPosition: mousePosition)
+        let rayIntersection = _globe!.pick(ray: ray, scene: _scene)
         
         let pickDistance = depthIntersection?.distance(camera.positionWC) ?? Double.infinity
         let rayDistance = rayIntersection?.distance(camera.positionWC) ?? Double.infinity
@@ -1021,12 +1021,12 @@ public class ScreenSpaceCameraController {
     func strafe (startPosition: Cartesian2, movement: MouseMovement) {
         let camera = _scene.camera
         
-        guard let mouseStartPosition = pickGlobe(movement.startPosition) else {
+        guard let mouseStartPosition = pickGlobe(mousePosition: movement.startPosition) else {
             return
         }
         
         let mousePosition = movement.endPosition
-        let ray = camera.getPickRay(mousePosition)
+        let ray = camera.getPickRay(windowPosition: mousePosition)
         
         var direction = camera.direction
         if _scene.mode == .ColumbusView {
@@ -1034,7 +1034,7 @@ public class ScreenSpaceCameraController {
         }
         
         let plane = Plane(fromPoint: mouseStartPosition, normal: direction)
-        guard let intersection = IntersectionTests.rayPlane(ray, plane: plane) else {
+        guard let intersection = IntersectionTests.rayPlane(ray: ray, plane: plane) else {
             return
         }
         
@@ -1058,7 +1058,7 @@ public class ScreenSpaceCameraController {
         let camera = _scene.camera
         
         if camera.transform != Matrix4.identity {
-            rotate3D(startPosition, movement: movement)
+            rotate3D(startPosition: startPosition, movement: movement)
             return
         }
         var magnitude: Double = 0.0
@@ -1066,14 +1066,14 @@ public class ScreenSpaceCameraController {
         
         let up = _ellipsoid.geodeticSurfaceNormal(camera.position)
         
-        let height = _ellipsoid.cartesianToCartographic(camera.positionWC)?.height
+        let height = _ellipsoid.cartesianToCartographic(cartesian: camera.positionWC)?.height
         
         var mousePos: Cartesian3? = nil
         var tangentPick = false
         if _globe != nil && height != nil && height! < minimumPickingTerrainHeight {
-            mousePos = pickGlobe(movement.startPosition)
+            mousePos = pickGlobe(mousePosition: movement.startPosition)
             if let mousePos = mousePos {
-                let ray = camera.getPickRay(movement.startPosition)
+                let ray = camera.getPickRay(windowPosition: movement.startPosition)
                 let normal = _ellipsoid.geodeticSurfaceNormal(mousePos)
                 tangentPick = abs(ray.direction.dot(normal)) < 0.05
                 
@@ -1086,16 +1086,16 @@ public class ScreenSpaceCameraController {
         
         if startPosition == _rotateMousePosition {
             if _looking {
-                look3D(startPosition, movement: movement, rotationAxis: up)
+                look3D(startPosition: startPosition, movement: movement, rotationAxis: up)
             } else if _rotating {
-                rotate3D(startPosition, movement: movement)
+                rotate3D(startPosition: startPosition, movement: movement)
             } else if _strafing {
                 _strafeStartPosition = mousePos!
-                strafe(startPosition, movement: movement)
+                strafe(startPosition: startPosition, movement: movement)
             } else {
                 magnitude = _rotateStartPosition.magnitude
                 ellipsoid = Ellipsoid(x: magnitude, y: magnitude, z: magnitude)
-                pan3D(startPosition, movement: movement, ellipsoid: ellipsoid)
+                pan3D(startPosition: startPosition, movement: movement, ellipsoid: ellipsoid)
             }
             return
         } else {
@@ -1109,27 +1109,27 @@ public class ScreenSpaceCameraController {
                 if camera.position.magnitude < mousePos!.magnitude {
                     _strafeStartPosition = mousePos!
                     _strafing = true
-                    strafe(startPosition, movement: movement)
+                    strafe(startPosition: startPosition, movement: movement)
                 } else {
                     magnitude = mousePos!.magnitude
                     let radii = Cartesian3(x: magnitude, y: magnitude, z: magnitude)
                     ellipsoid = Ellipsoid(radii: radii)
-                    pan3D(startPosition, movement: movement, ellipsoid: ellipsoid)
+                    pan3D(startPosition: startPosition, movement: movement, ellipsoid: ellipsoid)
                     _rotateStartPosition = mousePos!
                 }
             } else {
                 _looking = true
-                look3D(startPosition, movement: movement, rotationAxis: up)
+                look3D(startPosition: startPosition, movement: movement, rotationAxis: up)
             }
-        } else if let spin3DPick = camera.pickEllipsoid(movement.startPosition, ellipsoid: _ellipsoid) {
-            pan3D(startPosition, movement: movement, ellipsoid: _ellipsoid)
+        } else if let spin3DPick = camera.pickEllipsoid(windowPosition: movement.startPosition, ellipsoid: _ellipsoid) {
+            pan3D(startPosition: startPosition, movement: movement, ellipsoid: _ellipsoid)
             _rotateStartPosition = spin3DPick
         } else if height > minimumTrackBallHeight {
             _rotating = true
-            rotate3D(startPosition, movement: movement)
+            rotate3D(startPosition: startPosition, movement: movement)
         } else {
             _looking = true
-            look3D(startPosition, movement: movement, rotationAxis: up)
+            look3D(startPosition: startPosition, movement: movement, rotationAxis: up)
         }
         _rotateMousePosition = startPosition
     }
@@ -1162,11 +1162,11 @@ public class ScreenSpaceCameraController {
         let deltaTheta = rotateRate * thetaWindowRatio * M_PI
         
         if !rotateOnlyVertical {
-            camera.rotateRight(deltaPhi)
+            camera.rotateRight(angle: deltaPhi)
         }
         
         if !rotateOnlyHorizontal {
-            camera.rotateUp(deltaTheta)
+            camera.rotateUp(angle: deltaTheta)
         }
         
         camera.constrainedAxis = oldAxis
@@ -1186,17 +1186,17 @@ public class ScreenSpaceCameraController {
         let startMousePosition = movement.startPosition
         let endMousePosition = movement.endPosition
         
-        var p0: Cartesian3! = camera.pickEllipsoid(startMousePosition, ellipsoid: ellipsoid)
-        var p1: Cartesian3! = camera.pickEllipsoid(endMousePosition, ellipsoid: ellipsoid)
+        var p0: Cartesian3! = camera.pickEllipsoid(windowPosition: startMousePosition, ellipsoid: ellipsoid)
+        var p1: Cartesian3! = camera.pickEllipsoid(windowPosition: endMousePosition, ellipsoid: ellipsoid)
         
         if p0 == nil || p1 == nil {
             _rotating = true
-            rotate3D(startPosition, movement: movement)
+            rotate3D(startPosition: startPosition, movement: movement)
             return
         }
         
-        let c0 = camera.worldToCameraCoordinates(Cartesian4(x: p0.x, y: p0.y, z: p0.z, w: 1.0)) //var pan3DP0 = Cartesian4.clone(Cartesian4.UNIT_W);
-        let c1 = camera.worldToCameraCoordinates(Cartesian4(x: p1.x, y: p1.y, z: p1.z, w: 1.0)) //var pan3DP1 = Cartesian4.clone(Cartesian4.UNIT_W);
+        let c0 = camera.worldToCameraCoordinates(cartesian: Cartesian4(x: p0.x, y: p0.y, z: p0.z, w: 1.0)) //var pan3DP0 = Cartesian4.clone(Cartesian4.UNIT_W);
+        let c1 = camera.worldToCameraCoordinates(cartesian: Cartesian4(x: p1.x, y: p1.y, z: p1.z, w: 1.0)) //var pan3DP1 = Cartesian4.clone(Cartesian4.UNIT_W);
         p0 = Cartesian3(cartesian4: c0)
         p1 = Cartesian3(cartesian4: c1)
 
@@ -1208,7 +1208,7 @@ public class ScreenSpaceCameraController {
             
             if dot < 1.0 && !axis.equalsEpsilon(Cartesian3.zero, relativeEpsilon: Math.Epsilon14) { // dot is in [0, 1]
                 let angle = acos(dot)
-                camera.rotate(axis, angle: angle)
+                camera.rotate(axis: axis, angle: angle)
             }
         } else {
             let basis0 = camera.constrainedAxis!
@@ -1218,12 +1218,12 @@ public class ScreenSpaceCameraController {
             let startRho = p0.magnitude
             let startDot = basis0.dot(p0)
             let startTheta = acos(startDot / startRho)
-            let startRej = p0.subtract(basis0.multiplyByScalar(startDot)).normalize()
+            let startRej = p0.subtract(basis0.multiply(scalar: startDot)).normalize()
             
             let endRho = p1.magnitude
             let endDot = basis0.dot(p1)
             let endTheta = acos(endDot / endRho)
-            let endRej = p1.subtract(basis0.multiplyByScalar(endDot)).normalize()
+            let endRej = p1.subtract(basis0.multiply(scalar: endDot)).normalize()
             
             var startPhi = acos(startRej.dot(basis1))
             if startRej.dot(basis2) < 0 {
@@ -1261,8 +1261,8 @@ public class ScreenSpaceCameraController {
                 deltaTheta = startTheta - endTheta;
             }
             
-            camera.rotateRight(deltaPhi)
-            camera.rotateUp(deltaTheta)
+            camera.rotateRight(angle: deltaPhi)
+            camera.rotateUp(angle: deltaTheta)
         }
     }
     
@@ -1273,12 +1273,12 @@ public class ScreenSpaceCameraController {
         var windowPosition = Cartesian2()
         windowPosition.x = Double(_scene.drawableWidth) / 2.0
         windowPosition.y = Double(_scene.drawableHeight) / 2.0
-        let ray = _scene.camera.getPickRay(windowPosition)
+        let ray = _scene.camera.getPickRay(windowPosition: windowPosition)
         
         var intersection: Cartesian3? = nil
-        let height = _ellipsoid.cartesianToCartographic(camera.position)?.height
+        let height = _ellipsoid.cartesianToCartographic(cartesian: camera.position)?.height
         if _globe != nil && height != nil && height! < minimumPickingTerrainHeight {
-            intersection = pickGlobe(windowPosition)
+            intersection = pickGlobe(mousePosition: windowPosition)
         }
         
         let distance: Double
@@ -1288,7 +1288,7 @@ public class ScreenSpaceCameraController {
             distance = height!
         }
         let unitPosition = camera.position.normalize()
-        handleZoom(startPosition, movement: movement, zoomFactor: _zoomFactor, distanceMeasure: distance, unitPositionDotDirection: unitPosition.dot(camera.direction))
+        handleZoom(startPosition: startPosition, movement: movement, zoomFactor: _zoomFactor, distanceMeasure: distance, unitPositionDotDirection: unitPosition.dot(camera.direction))
     }
     /*
     var tilt3DWindowPos = new Cartesian2();
@@ -1623,7 +1623,7 @@ public class ScreenSpaceCameraController {
     }
 
     func update3D() {
-        reactToInput(enableRotate, eventTypes: rotateEventTypes, action: spin3D, inertiaConstant: inertiaSpin, inertiaStateName: "_lastInertiaSpinMovement")
+        reactToInput(enabled: enableRotate, eventTypes: rotateEventTypes, action: spin3D, inertiaConstant: inertiaSpin, inertiaStateName: "_lastInertiaSpinMovement")
         //reactToInput(enableZoom, eventTypes: zoomEventTypes, action: zoom3D, inertiaConstant: inertiaZoom, inertiaStateName: "_lastInertiaZoomMovement")
         /*reactToInput(enableTilt, tiltEventTypes, tilt3D, controller.inertiaSpin, "_lastInertiaTiltMovement");
         reactToInput(enableLook, lookEventTypes, look3D)*/
@@ -1654,14 +1654,14 @@ public class ScreenSpaceCameraController {
         
         var cartographic: Cartographic
         if mode == SceneMode.Scene3D {
-            cartographic = ellipsoid.cartesianToCartographic(camera.position)!
+            cartographic = ellipsoid.cartesianToCartographic(cartesian: camera.position)!
         } else {
-            cartographic = projection.unproject(camera.position)
+            cartographic = projection.unproject(cartesian: camera.position)
         }
         
         var heightUpdated = false
         if cartographic.height < minimumCollisionTerrainHeight {
-            if let height = _globe!.getHeight(cartographic) {
+            if let height = _globe!.getHeight(cartographic: cartographic) {
                 var height = height
                 height += minimumZoomDistance
                 if cartographic.height < height {
@@ -1669,7 +1669,7 @@ public class ScreenSpaceCameraController {
                     if mode == .Scene3D {
                         camera.position = ellipsoid.cartographicToCartesian(cartographic)
                     } else {
-                        camera.position = projection.project(cartographic)
+                        camera.position = projection.project(cartographic: cartographic)
                     }
                     heightUpdated = true
                 }
@@ -1682,7 +1682,7 @@ public class ScreenSpaceCameraController {
             if (heightUpdated) {
                 camera.position = camera.position.normalize()
                 camera.direction = camera.position.negate()
-                camera.position = camera.position.multiplyByScalar(max(mag, minimumZoomDistance))
+                camera.position = camera.position.multiply(scalar: max(mag, minimumZoomDistance))
                 camera.direction = camera.direction.normalize()
                 camera.right = camera.direction.cross(camera.up)
                 camera.up = camera.right.cross(camera.direction)

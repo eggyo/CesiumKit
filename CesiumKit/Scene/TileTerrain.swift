@@ -102,7 +102,7 @@ class TileTerrain {
     
     func processLoadStateMachine (frameState frameState: FrameState, terrainProvider: TerrainProvider, x: Int, y: Int, level: Int) {
         if state == .Unloaded {
-            requestTileGeometry(terrainProvider, x: x, y: y, level: level)
+            requestTileGeometry(terrainProvider: terrainProvider, x: x, y: y, level: level)
         } else if state == .Received {
             transform(frameState: frameState, terrainProvider: terrainProvider, x: x, y: y, level: level)
         } else if state == .Transformed {
@@ -206,7 +206,7 @@ class TileTerrain {
     
     func createResources(frameState frameState: FrameState, terrainProvider: TerrainProvider, x: Int, y: Int, level: Int) {
         
-        let context = frameState.context
+        let context: Context = frameState.context
         
         self.state = .Buffering
         var terrainMesh = self.mesh!

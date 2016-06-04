@@ -76,12 +76,12 @@ struct SceneTransforms {
         
         var positionEC = viewMatrix.multiply(vector: Cartesian4(x: position.x, y: position.y, z: position.z, w: 1.0))
         
-        let zEyeOffset = eyeOffset.multiplyComponents(Cartesian3(cartesian4: positionEC.normalize()))
+        let zEyeOffset = eyeOffset.multiply(Cartesian3(cartesian4: positionEC.normalize()))
         positionEC.x += eyeOffset.x + zEyeOffset.x
         positionEC.y += eyeOffset.y + zEyeOffset.y
         positionEC.z += zEyeOffset.z
         
-        return camera.frustum.projectionMatrix.multiplyByVector(positionEC)
+        return camera.frustum.projectionMatrix.multiply(vector: positionEC)
     }
     
     static func wgs84WithEyeOffsetToWindowCoordinates (scene: Scene, position: Cartesian3, eyeOffset: Cartesian3) -> Cartesian2? {
@@ -261,7 +261,7 @@ struct SceneTransforms {
         // Viewport transform to transform from clip coordinates to window coordinates
         let viewportTransform = Matrix4.computeViewportTransformation(viewport: viewport)
         
-        let positionWC = viewportTransform.multiplyByPoint(Cartesian3(cartesian4: positionNDC))
+        let positionWC = viewportTransform.multiply(point: Cartesian3(cartesian4: positionNDC))
         
         return Cartesian2(cartesian3: positionWC)
     }

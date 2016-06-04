@@ -172,7 +172,8 @@ class CesiumTerrainProvider: TerrainProvider {
         _requestWaterMask = requestWaterMask
         self.credit = credit
         
-        _levelZeroMaximumGeometricError = CesiumTerrainProvider.estimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid: self.ellipsoid, tileImageWidth: _heightmapWidth, numberOfTilesAtLevelZero: tilingScheme.numberOfXTilesAtLevel(0))
+        _levelZeroMaximumGeometricError = CesiumTerrainProvider.estimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid: self.ellipsoid, tileImageWidth: _heightmapWidth, numberOfTilesAtLevelZero: tilingScheme.numberOfXTilesAt(level:
+            0))
         
         
         //this._readyPromise = when.defer();
@@ -186,17 +187,17 @@ class CesiumTerrainProvider: TerrainProvider {
         let metadataSuccess = { (data: NSData) in
             
             do {
-                let metadata = try JSON.decode(data, strict: true)
+                let metadata = try JSON.decode(string: String(data: data, encoding: NSUTF8StringEncoding)!, strict: true)
                 
                 var message: String? = nil
                 
-                guard let tiles = try metadata.getArrayOrNil("tiles") else {
+                guard let tiles = try metadata.getArrayOrNil(key: "tiles") else {
                     message = "The layer.json file does not specify any tile URL templates."
                     //metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
                     return
                 }
 
-                guard let format = try metadata.getStringOrNil("format") else {
+                guard let format = try metadata.getStringOrNil(key: "format") else {
                     message = "The tile format is not specified in the layer.json file."
                     //metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
                     return
@@ -218,7 +219,7 @@ class CesiumTerrainProvider: TerrainProvider {
                     //metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
                     return
                 }
-                let version = try metadata.getString("version")
+                let version = try metadata.getString(key: "version")
                 
                 let baseURL: NSURLComponents = NSURLComponents(string: self.url)!
                 self._tileUrlTemplates = tiles.map {
@@ -233,15 +234,15 @@ class CesiumTerrainProvider: TerrainProvider {
                     if let string = template?.string {
                         templateString = string
                     }
-                    let url = baseURL.URL!
+                    let url = baseURL.url!
                     
-                    let path = templateString.replace("{version}", version)
+                    let path = templateString.replace(existingString: "{version}", version)
                     return url.absoluteString + "/" + path
                 }
                 
-                self._availableTiles = try metadata.getArray("available").map { $0 }
+                self._availableTiles = try metadata.getArray(key: "available").map { $0 }
                 
-                if let attribution = try metadata.getStringOrNil("attribution") {
+                if let attribution = try metadata.getStringOrNil(key: "attribution") {
                     self.credit = Credit(text: attribution)
                 }
                 
@@ -251,7 +252,7 @@ class CesiumTerrainProvider: TerrainProvider {
                 // We maintain backwards compatibility with the legacy 'vertexnormal' implementation
                 // by setting the _littleEndianExtensionSize to false. Always prefer 'octvertexnormals'
                 // over 'vertexnormals' if both extensions are supported by the server.
-                if let extensions = try metadata.getArrayOrNil("extensions") {
+                if let extensions = try metadata.getArrayOrNil(key: "extensions") {
                     if extensions.contains("octvertexnormals") {
                         self._hasVertexNormals = true
                     } else if extensions.contains("vertexnormals") {
@@ -336,7 +337,7 @@ class CesiumTerrainProvider: TerrainProvider {
         if extensionsList == nil || extensionsList!.count == 0 {
             return ["Accept": "application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01"]
         } else {
-            let extensions = extensionsList!.joinWithSeparator("-")
+            let extensions = extensionsList!.joined(separator: "-")
             return ["Accept" : "application/vnd.quantized-mesh;extensions=" + extensions + ",application/octet-stream;q=0.9,*/*;q=0.01"]
         }
     }
@@ -374,7 +375,7 @@ class CesiumTerrainProvider: TerrainProvider {
         )
         pos += cartesian3Length
         
-        let minimumHeight = Double(data.getFloat32(pos: pos))
+        let minimumHeight = Double(data.getFloat32(pos))
         pos += strideof(Float)
         let maximumHeight = Double(data.getFloat32(pos))
         pos += strideof(Float)
@@ -407,7 +408,7 @@ class CesiumTerrainProvider: TerrainProvider {
             triangleLength = bytesPerIndex * triangleElements
         }
         
-        func zigZagDecode(value: UInt16) -> Int16 {
+        func zigZagDecode(_ value: UInt16) -> Int16 {
             let int32Value = Int32(value)
             return Int16((int32Value >> 1) ^ (-(int32Value & 1)))
         }
@@ -443,9 +444,7 @@ class CesiumTerrainProvider: TerrainProvider {
         // Copyright 2012 Google Inc., Apache 2.0 license.
         var highest = 0
         
-        let indices = IndexDatatype
-            .createIntegerIndexArrayFromData(data, numberOfVertices: vertexCount, byteOffset: pos, length: triangleCount * triangleElements)
-            .map { (value: Int) -> Int in
+        let indices = IndexDatatype.createIntegerIndexArrayFrom(data: data, numberOfVertices: vertexCount, byteOffset: pos, length: triangleCount * triangleElements).map { (value: Int) -> Int in
                 let result = highest - Int(value)
                 if value == 0 {
                     highest += 1
@@ -457,22 +456,22 @@ class CesiumTerrainProvider: TerrainProvider {
                 
         let westVertexCount = Int(data.getUInt32(pos))
         pos += strideof(UInt32)
-        let westIndices = IndexDatatype.createIntegerIndexArrayFromData(data, numberOfVertices: vertexCount, byteOffset: pos, length: westVertexCount)
+        let westIndices = IndexDatatype.createIntegerIndexArrayFrom(data: data, numberOfVertices: vertexCount, byteOffset: pos, length: westVertexCount)
         pos += westVertexCount * bytesPerIndex
         
         let southVertexCount = Int(data.getUInt32(pos))
         pos += strideof(UInt32)
-        let southIndices = IndexDatatype.createIntegerIndexArrayFromData(data, numberOfVertices: vertexCount, byteOffset: pos, length: southVertexCount)
+        let southIndices = IndexDatatype.createIntegerIndexArrayFrom(data: data, numberOfVertices: vertexCount, byteOffset: pos, length: southVertexCount)
         pos += southVertexCount * bytesPerIndex
         
         let eastVertexCount = Int(data.getUInt32(pos))
         pos += strideof(UInt32)
-        let eastIndices = IndexDatatype.createIntegerIndexArrayFromData(data, numberOfVertices: vertexCount, byteOffset: pos, length: eastVertexCount)
+        let eastIndices = IndexDatatype.createIntegerIndexArrayFrom(data: data, numberOfVertices: vertexCount, byteOffset: pos, length: eastVertexCount)
         pos += eastVertexCount * bytesPerIndex
         
         let northVertexCount = Int(data.getUInt32(pos))
         pos += strideof(UInt32)
-        let northIndices = IndexDatatype.createIntegerIndexArrayFromData(data, numberOfVertices: vertexCount, byteOffset: pos, length: northVertexCount)
+        let northIndices = IndexDatatype.createIntegerIndexArrayFrom(data: data, numberOfVertices: vertexCount, byteOffset: pos, length: northVertexCount)
         pos += northVertexCount * bytesPerIndex
         
         var encodedNormalBuffer: [UInt8]? = nil
@@ -491,7 +490,7 @@ class CesiumTerrainProvider: TerrainProvider {
             pos += extensionLength
         }
         
-        let skirtHeight = levelMaximumGeometricError(level) * 5.0
+        let skirtHeight = maximumGeometricErrorFor(level: level) * 5.0
         
         let rectangle = tilingScheme.tileXYToRectangle(x: x, y: y, level: level)
         let orientedBoundingBox: OrientedBoundingBox?
@@ -530,7 +529,7 @@ class CesiumTerrainProvider: TerrainProvider {
             southSkirtHeight: skirtHeight,
             eastSkirtHeight: skirtHeight,
             northSkirtHeight: skirtHeight,
-            childTileMask: getChildMaskForTile(level, x: x, y: tmsY),
+            childTileMask: getChildMaskForTile(level: level, x: x, y: tmsY),
             waterMask: waterMaskBuffer
         )
         completionBlock(data: terrainData)
@@ -562,11 +561,11 @@ class CesiumTerrainProvider: TerrainProvider {
             completionBlock(nil)
         }
         
-        let yTiles = tilingScheme.numberOfYTilesAtLevel(level)
+        let yTiles = tilingScheme.numberOfYTilesAt(level: level)
         
         let tmsY = yTiles - y - 1
         
-        let url = _tileUrlTemplates[(x + tmsY + level) % _tileUrlTemplates.count].replace("{z}", "\(level)").replace("{x}", "\(x)").replace("{y}", "\(tmsY)")
+        let url = _tileUrlTemplates[(x + tmsY + level) % _tileUrlTemplates.count].replace(existingString: "{z}", "\(level)").replace(existingString: "{x}", "\(x)").replace(existingString: "{y}", "\(tmsY)")
         
         /*
          var proxy = this._proxy;
@@ -582,7 +581,7 @@ class CesiumTerrainProvider: TerrainProvider {
             extensionList.append("watermask")
         }
         
-        let tileLoader = NetworkOperation(url: url, headers: getRequestHeader(extensionList))
+        let tileLoader = NetworkOperation(url: url, headers: getRequestHeader(extensionsList: extensionList))
         tileLoader.completionBlock = {
             if let error = tileLoader.error {
                 print(error.localizedDescription)
@@ -594,7 +593,7 @@ class CesiumTerrainProvider: TerrainProvider {
                     terrainData = nil
                     //return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
                 } else {
-                    self.createQuantizedMeshTerrainData(tileLoader.data, level: level, x: x, y: y, tmsY: tmsY, completionBlock: { data in terrainData = data })
+                    self.createQuantizedMeshTerrainData(data: tileLoader.data, level: level, x: x, y: y, tmsY: tmsY, completionBlock: { data in terrainData = data })
                 }
                 dispatch_async(dispatch_get_main_queue()) {
                     completionBlock(terrainData)
@@ -700,7 +699,7 @@ class CesiumTerrainProvider: TerrainProvider {
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
-    func levelMaximumGeometricError (level: Int) -> Double {
+    func maximumGeometricErrorFor (level: Int) -> Double {
         return _levelZeroMaximumGeometricError / Double(1 << level)
     }
     
@@ -731,13 +730,13 @@ class CesiumTerrainProvider: TerrainProvider {
         return mask
     }
     
-    func isTileInRange(levelAvailable: JSONArray, x: Int, y: Int) -> Bool {
+    func isTileInRange(_ levelAvailable: JSONArray, x: Int, y: Int) -> Bool {
         for range in levelAvailable {
             do {
-                let startX = try range.getInt("startX")
-                let endX = try range.getInt("endX")
-                let startY = try range.getInt("startY")
-                let endY = try range.getInt("endY")
+                let startX = try range.getInt(key: "startX")
+                let endX = try range.getInt(key: "endX")
+                let startY = try range.getInt(key: "startY")
+                let endY = try range.getInt(key: "endY")
                 
                 if x >= startX && x <= endX && y >= startY && y <= endY {
                     return true

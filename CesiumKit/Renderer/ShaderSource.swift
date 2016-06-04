@@ -96,7 +96,7 @@ struct ShaderSource {
     * @returns {String} The combined shader string.
     */
     func createCombinedVertexShader () -> String {
-        return combineShader(false)
+        return combineShader(isFragmentShader: false)
     }
     
     /**
@@ -105,7 +105,7 @@ struct ShaderSource {
     * @returns {String} The combined shader string.
     */
     func createCombinedFragmentShader () -> String {
-        return combineShader(true)
+        return combineShader(isFragmentShader: true)
     }
 
     func combineShader(isFragmentShader: Bool) -> String {
@@ -113,20 +113,20 @@ struct ShaderSource {
         // Combine shader sources, generally for pseudo-polymorphism, e.g., czm_getMaterial.
         var combinedSources = ""
         
-        for (i, source) in sources.enumerate() {
+        for (i, source) in sources.enumerated() {
                 // #line needs to be on its own line.
                 combinedSources += "\n#line 0\n" + sources[i];
         }
         
-        combinedSources = removeComments(combinedSources)
+        combinedSources = removeComments(source: combinedSources)
         
         var version: String? = nil
         
         // Extract existing shader version from sources
         let versionRange = combinedSources[_versionRegex].range()
         if versionRange.location != NSNotFound {
-            version = (combinedSources as NSString).substringWithRange(versionRange)
-            combinedSources.replace(version!, "\n")
+            version = (combinedSources as NSString).substring(with: versionRange)
+            combinedSources.replace(existingString: version!, "\n")
         }
         
         // Replace main() for picked if desired.
@@ -163,7 +163,7 @@ struct ShaderSource {
         
         // append built-ins
         if includeBuiltIns {
-            result += getBuiltinsAndAutomaticUniforms(combinedSources)
+            result += getBuiltinsAndAutomaticUniforms(shaderSource: combinedSources)
         }
         
         // reset line number
@@ -190,7 +190,7 @@ struct ShaderSource {
                 for lineNumber in 0..<numberOfLines {
                     modifiedComment += "//\n"
                 }
-                newSource = newSource.replace(comment, modifiedComment)
+                newSource = newSource.replace(existingString: comment, modifiedComment)
             }
         }
         return newSource
@@ -200,15 +200,15 @@ struct ShaderSource {
         // generate a dependency graph for builtin functions
         
         var dependencyNodes = [DependencyNode]()
-        let root = getDependencyNode("main", glslSource: shaderSource, nodes: &dependencyNodes)
-        generateDependencies(root, dependencyNodes: &dependencyNodes)
-        sortDependencies(&dependencyNodes)
+        let root = getDependencyNode(name: "main", glslSource: shaderSource, nodes: &dependencyNodes)
+        generateDependencies(currentNode: root, dependencyNodes: &dependencyNodes)
+        sortDependencies(dependencyNodes: &dependencyNodes)
         
         // Concatenate the source code for the function dependencies.
         // Iterate in reverse so that dependent items are declared before they are used.
-        return Array(dependencyNodes.reverse())
-            .reduce("", combine: { $0 + $1.glslSource + "\n" })
-            .replace(root.glslSource, "")
+        return Array(dependencyNodes.reversed())
+            .reduce("") { $0 + $1.glslSource + "\n" }
+            .replace(existingString: root.glslSource, "")
     }
     
     private func getDependencyNode(name: String, glslSource: String, nodes: inout [DependencyNode]) -> DependencyNode {
@@ -225,7 +225,7 @@ struct ShaderSource {
         if dependencyNode == nil {
             // strip doc comments so we don't accidentally try to determine a dependency for something found
             // in a comment
-            let newGLSLSource = removeComments(glslSource)
+            let newGLSLSource = removeComments(source: glslSource)
             
             // create new node
             dependencyNode = DependencyNode(name: name, glslSource: newGLSLSource)
@@ -242,24 +242,24 @@ struct ShaderSource {
         currentNode.evaluated = true
         
         // identify all dependencies that are referenced from this glsl source code
-        let czmMatches = deleteDuplicates(currentNode.glslSource[_czmRegex].matches())
+        let czmMatches = deleteDuplicates(seq: currentNode.glslSource[_czmRegex].matches())
         for match in czmMatches {
             if (match != currentNode.name) {
                 var elementSource: String? = nil
                 if let builtin = Builtins[match] {
                     elementSource = builtin
                 } else if let uniform = AutomaticUniforms[match] {
-                    elementSource = uniform.declaration(match)
+                    elementSource = uniform.declaration(name: match)
                 } else {
                     print("uniform \(match) not found")
                 }
                 if elementSource != nil {
-                    let referencedNode = getDependencyNode(match, glslSource: elementSource!, nodes: &dependencyNodes)
+                    let referencedNode = getDependencyNode(name: match, glslSource: elementSource!, nodes: &dependencyNodes)
                     currentNode.dependsOn.append(referencedNode)
                     referencedNode.requiredBy.append(currentNode)
                     
                     // recursive call to find any dependencies of the new node
-                    generateDependencies(referencedNode, dependencyNodes: &dependencyNodes)
+                    generateDependencies(currentNode: referencedNode, dependencyNodes: &dependencyNodes)
                 }
                 
             }
@@ -281,15 +281,15 @@ struct ShaderSource {
         }
         
         while nodesWithoutIncomingEdges.count > 0 {
-            let currentNode = nodesWithoutIncomingEdges.removeAtIndex(0)
+            let currentNode = nodesWithoutIncomingEdges.remove(at: 0)
             
             dependencyNodes.append(currentNode)
-            for (var i = 0; i < currentNode.dependsOn.count; i += 1) {
+            for i in 0 ..< currentNode.dependsOn.count {
                 // remove the edge from the graph
                 let referencedNode = currentNode.dependsOn[i]
-                let index = referencedNode.requiredBy.indexOf(currentNode)
+                let index = referencedNode.requiredBy.index(of: currentNode)
                 if (index != nil) {
-                    referencedNode.requiredBy.removeAtIndex(index!)
+                    referencedNode.requiredBy.remove(at: index!)
                 }
                 
                 // if referenced node has no more incoming edges, add to list

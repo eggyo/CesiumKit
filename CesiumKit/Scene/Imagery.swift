@@ -79,7 +79,7 @@ class Imagery {
         _referenceCount -= 1
         
         if _referenceCount == 0 {
-            imageryLayer.removeImageryFromCache(self)
+            imageryLayer.removeImageryFromCache(imagery: self)
             
             if parent != nil {
                 parent!.releaseReference()
@@ -92,7 +92,7 @@ class Imagery {
     func processStateMachine (frameState frameState: inout FrameState) {
         if (state == .Unloaded) {
             state = .Transitioning
-            imageryLayer.requestImagery(self)
+            imageryLayer.request(imagery: self)
         }
         if (state == .Received) {
             state = .Transitioning

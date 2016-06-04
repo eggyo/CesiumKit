@@ -135,7 +135,7 @@ struct BoundingSphere: BoundingVolume {
         let minBoxPt = Cartesian3(x: xMin.x, y: yMin.y, z: zMin.z)
         let maxBoxPt = Cartesian3(x: xMax.x, y: yMax.y, z: zMax.z)
         
-        let naiveCenter = minBoxPt.add(maxBoxPt).multiplyByScalar(scalar: 0.5)
+        let naiveCenter = minBoxPt.add(maxBoxPt).multiply(scalar: 0.5)
         
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0.0;
@@ -143,7 +143,7 @@ struct BoundingSphere: BoundingVolume {
             currentPos = points[i]
             
             // Find the furthest point from the naive center to calculate the naive radius.
-            let r = currentPos.subtract(other: naiveCenter).magnitude
+            let r = currentPos.subtract(naiveCenter).magnitude
             if (r > naiveRadius) {
                 naiveRadius = r
             }
@@ -234,7 +234,7 @@ struct BoundingSphere: BoundingVolume {
     */
     init (fromRectangle3D rectangle: Rectangle, ellipsoid: Ellipsoid = Ellipsoid.wgs84(), surfaceHeight: Double = 0) {
         let positions: [Cartesian3]
-        positions = rectangle.subsample(ellipsoid: ellipsoid, surfaceHeight: surfaceHeight)
+        positions = rectangle.subsample(ellipsoid, surfaceHeight: surfaceHeight)
         self.init(fromPoints: positions)
     }
 
@@ -385,7 +385,7 @@ struct BoundingSphere: BoundingVolume {
         
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0.0
-        for i in stride(from: 0, to: numElements, by: stride) {
+        for i in stride(from: 0, to: numElements, by: increment) {
             currentPos.x = Double(positions[i]) + center.x
             currentPos.y = Double(positions[i + 1]) + center.y
             currentPos.z = Double(positions[i + 2]) + center.z
@@ -683,7 +683,7 @@ BoundingSphere.expand = function(sphere, point, result) {
     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
     *                      intersects the plane.
     */
-    func intersectPlane(plane: Plane) -> Intersect {
+    func intersect (plane: Plane) -> Intersect {
 
         let distanceToPlane = plane.normal.dot(center) + plane.distance
         

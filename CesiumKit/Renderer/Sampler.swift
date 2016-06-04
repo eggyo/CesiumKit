@@ -21,7 +21,7 @@ class Sampler {
         descriptor.tAddressMode = wrapT.toMetal()
         descriptor.maxAnisotropy = maximumAnisotropy
         
-        state = context.createSamplerState(descriptor)
+        state = context.createSamplerState(descriptor: descriptor)
     }
 }
 

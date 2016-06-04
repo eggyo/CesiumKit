@@ -61,9 +61,9 @@ extension HeadingPitchRange: Offset {
         let rotMatrix = Matrix3(quaternion: rotQuat)
         
         let offset = rotMatrix
-            .multiplyByVector(Cartesian3.unitX)
+            .multiply(vector: Cartesian3.unitX)
             .negate()
-            .multiplyByScalar(range)
+            .multiply(scalar: range)
         return offset
     }   
     

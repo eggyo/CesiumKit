@@ -25,7 +25,7 @@ class DepthPlane {
         let p = frameState.camera!.positionWC
         
         // Find the corresponding position in the scaled space of the ellipsoid.
-        let q = ellipsoid.oneOverRadii.multiplyComponents(p)
+        let q = ellipsoid.oneOverRadii.multiply(p)
         
         let qMagnitude = q.magnitude
         let qUnit = q.normalize()
@@ -38,32 +38,32 @@ class DepthPlane {
         let wMagnitude = sqrt(q.magnitudeSquared - 1.0)
         
         // Compute the center and offsets.
-        let center = qUnit.multiplyByScalar(1.0 / qMagnitude)
+        let center = qUnit.multiply(scalar: 1.0 / qMagnitude)
         let scalar = wMagnitude / qMagnitude
-        let eastOffset = eUnit.multiplyByScalar(scalar)
-        let northOffset = nUnit.multiplyByScalar(scalar)
+        let eastOffset = eUnit.multiply(scalar: scalar)
+        let northOffset = nUnit.multiply(scalar: scalar)
         
-        var depthQuad = [Float](count: 12, repeatedValue: 0.0)
+        var depthQuad = [Float](repeating: 0.0, count: 12)
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
         let upperLeft = center
             .add(northOffset)
             .subtract(eastOffset)
-        radii.multiplyComponents(upperLeft).pack(&depthQuad, startingIndex: 0)
+        radii.multiply(upperLeft).pack(array: &depthQuad, startingIndex: 0)
         
         let lowerLeft = center
             .subtract(northOffset)
             .subtract(eastOffset)
-        radii.multiplyComponents(lowerLeft).pack(&depthQuad, startingIndex: 3)
+        radii.multiply(lowerLeft).pack(array: &depthQuad, startingIndex: 3)
         
         let upperRight = center
             .add(northOffset)
             .add(eastOffset)
-        radii.multiplyComponents(upperRight).pack(&depthQuad, startingIndex: 6)
+        radii.multiply(upperRight).pack(array: &depthQuad, startingIndex: 6)
         
         let lowerRight = center
             .subtract(northOffset)
             .add(eastOffset)
-        radii.multiplyComponents(lowerRight).pack(&depthQuad, startingIndex: 9)
+        radii.multiply(lowerRight).pack(array: &depthQuad, startingIndex: 9)
         
         return depthQuad
     }
@@ -76,12 +76,12 @@ class DepthPlane {
         }
         
         let ellipsoid = frameState.mapProjection.ellipsoid
-        let context = frameState.context
+        let context = frameState.context!
         
         if _command == nil {
             _rs = RenderState( // Write depth, not color
                 device: context.device,
-                cullFace: .Back,
+                cullFace: .back,
                 depthTest: RenderState.DepthTest(
                     enabled: true,
                     function: .Always
@@ -121,7 +121,7 @@ class DepthPlane {
             )
         }
         // update depth plane
-        let depthQuad = computeDepthQuad(ellipsoid, frameState: frameState)
+        let depthQuad = computeDepthQuad(ellipsoid: ellipsoid, frameState: frameState)
         
         // depth plane
         if _va == nil {
@@ -141,7 +141,7 @@ class DepthPlane {
                     
                 ),
                 indices : [0, 1, 2, 2, 1, 3],
-                primitiveType : .Triangle
+                primitiveType : .triangle
             )
             
             _va = VertexArray(
@@ -151,13 +151,13 @@ class DepthPlane {
             )
             _command!.vertexArray = _va
         } else {
-            _va!.attributes[0].buffer?.copyFromArray(depthQuad, length: depthQuad.sizeInBytes)
+            _va!.attributes[0].buffer?.copyFrom(array: depthQuad, length: depthQuad.sizeInBytes)
         }
     }
     
     func execute (context: Context, renderPass: RenderPass, frustumUniformBuffer: Buffer? = nil) {
         if _mode == SceneMode.Scene3D {
-            _command?.execute(context, renderPass: renderPass, frustumUniformBuffer: frustumUniformBuffer)
+            _command?.execute(in: context, renderPass: renderPass, frustumUniformBuffer: frustumUniformBuffer)
         }
     }
 

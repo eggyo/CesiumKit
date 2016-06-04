@@ -57,7 +57,7 @@ class SkyAtmosphere {
         self.ellipsoid = ellipsoid
 
         let map = SkyAtmosphereUniformMap()
-        map.fOuterRadius = Float(ellipsoid.radii.multiplyByScalar(1.025).maximumComponent())
+        map.fOuterRadius = Float(ellipsoid.radii.multiply(scalar: 1.025).maximumComponent())
         map.fOuterRadius2 = map.fOuterRadius * map.fOuterRadius
         map.fInnerRadius = Float(ellipsoid.maximumRadius)
         map.fScale = 1.0 / (map.fOuterRadius - map.fInnerRadius)
@@ -82,24 +82,24 @@ class SkyAtmosphere {
             return nil
         }
         
-        let context = frameState.context
+        let context: Context = frameState.context
     
         if _command.vertexArray == nil {
             let geometry = EllipsoidGeometry(
-                radii : ellipsoid.radii.multiplyByScalar(1.025),
+                radii : ellipsoid.radii.multiply(scalar: 1.025),
                 slicePartitions : 256,
                 stackPartitions : 256,
                 vertexFormat : VertexFormat.PositionOnly()
-            ).createGeometry(context)
+            ).createGeometry(context: context)
             
             _command.vertexArray = VertexArray(
                 fromGeometry: geometry,
                 context: context,
-                attributeLocations: GeometryPipeline.createAttributeLocations(geometry)
+                attributeLocations: GeometryPipeline.createAttributeLocations(geometry: geometry)
             )
             _command.renderState = RenderState(
                 device: context.device,
-                cullFace: .Front
+                cullFace: .front
             )
             
             let metalStruct = (_command.uniformMap as! NativeUniformMap).generateMetalUniformStruct()
@@ -115,7 +115,7 @@ class SkyAtmosphere {
                 ),
                 vertexDescriptor: VertexDescriptor(attributes: _command.vertexArray!.attributes),
                 depthStencil: context.depthTexture,
-                blendingState: .AlphaBlend(),
+                blendingState: .alphaBlend(),
                 manualUniformStruct: metalStruct,
                 uniformStructSize: strideof(SkyAtmosphereUniformStruct)
             )
@@ -131,12 +131,12 @@ class SkyAtmosphere {
                 ),
                 vertexDescriptor: VertexDescriptor(attributes: _command.vertexArray!.attributes),
                 depthStencil: context.depthTexture,
-                blendingState: .AlphaBlend(),
+                blendingState: .alphaBlend(),
                 manualUniformStruct: metalStruct,
                 uniformStructSize: strideof(SkyAtmosphereUniformStruct)
             )
             
-            _command.uniformMap?.uniformBufferProvider = _rpSkyFromSpace!.shaderProgram.createUniformBufferProvider(context.device, deallocationBlock: nil)
+            _command.uniformMap?.uniformBufferProvider = _rpSkyFromSpace!.shaderProgram.createUniformBufferProvider(device: context.device, deallocationBlock: nil)
         }
     
         let cameraPosition = frameState.camera!.positionWC

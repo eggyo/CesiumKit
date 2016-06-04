@@ -27,7 +27,7 @@ class PipelineCache {
     
     init (device: MTLDevice) {
         self.device = device
-        _optimizer = GLSLOptimizer(.Metal)
+        _optimizer = GLSLOptimizer(.metal)
     }
         
     /**
@@ -103,14 +103,14 @@ class PipelineCache {
         pipelineDescriptor.fragmentFunction = shader.metalFragmentFunction
         
         color.pixelFormat = context.view.colorPixelFormat
-        let colorWriteMask: MTLColorWriteMask = colorMask != nil ? colorMask!.toMetal() : MTLColorWriteMask.All
+        let colorWriteMask: MTLColorWriteMask = colorMask != nil ? colorMask!.toMetal() : MTLColorWriteMask.all
         color.writeMask = colorWriteMask
         
-        pipelineDescriptor.depthAttachmentPixelFormat = depthStencil ? .Depth32Float_Stencil8 : .Invalid
-        pipelineDescriptor.stencilAttachmentPixelFormat = depthStencil ? .Depth32Float_Stencil8 : .Invalid
+        pipelineDescriptor.depthAttachmentPixelFormat = depthStencil ? .depth32Float_Stencil8 : .invalid
+        pipelineDescriptor.stencilAttachmentPixelFormat = depthStencil ? .depth32Float_Stencil8 : .invalid
         
         if let blendingState = blendingState {
-            color.blendingEnabled = true
+            color.isBlendingEnabled = true
             color.rgbBlendOperation = blendingState.equationRgb.toMetal()
             color.sourceRGBBlendFactor = blendingState.functionSourceRgb.toMetal()
             color.destinationRGBBlendFactor = blendingState.functionDestinationRgb.toMetal()
@@ -158,14 +158,14 @@ class PipelineCache {
         pipelineDescriptor.fragmentFunction = shader.metalFragmentFunction
         
         color.pixelFormat = context.view.colorPixelFormat
-        let colorWriteMask: MTLColorWriteMask = colorMask != nil ? colorMask!.toMetal() : MTLColorWriteMask.All
+        let colorWriteMask: MTLColorWriteMask = colorMask != nil ? colorMask!.toMetal() : MTLColorWriteMask.all
         color.writeMask = colorWriteMask
         
-        pipelineDescriptor.depthAttachmentPixelFormat = depthStencil ? .Depth32Float_Stencil8 : .Invalid
-        pipelineDescriptor.stencilAttachmentPixelFormat = depthStencil ? .Depth32Float_Stencil8 : .Invalid
+        pipelineDescriptor.depthAttachmentPixelFormat = depthStencil ? .depth32Float_Stencil8 : .invalid
+        pipelineDescriptor.stencilAttachmentPixelFormat = depthStencil ? .depth32Float_Stencil8 : .invalid
         
         if let blendingState = blendingState {
-            color.blendingEnabled = true
+            color.isBlendingEnabled = true
             color.rgbBlendOperation = blendingState.equationRgb.toMetal()
             color.sourceRGBBlendFactor = blendingState.functionSourceRgb.toMetal()
             color.destinationRGBBlendFactor = blendingState.functionDestinationRgb.toMetal()
@@ -197,10 +197,10 @@ class PipelineCache {
     *
     * @param {ShaderProgram} shader The shader to decrement
     */
-    func releasePipeline(pipeline: RenderPipeline) {
+    func releasePipeline(_ pipeline: RenderPipeline) {
         pipeline.count -= 1
         if pipeline.count < 1 {
-            _pipelines.removeValueForKey(pipeline.keyword)
+            _pipelines.removeValue(forKey: pipeline.keyword)
         }
     }
 

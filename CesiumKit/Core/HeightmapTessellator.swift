@@ -135,7 +135,7 @@ class HeightmapTessellator {
         let heightScale = structure.heightScale
         let heightOffset = structure.heightOffset
         let elementsPerHeight = structure.elementsPerHeight
-        let stride = structure.stride
+        let increment = structure.stride
         let elementMultiplier = structure.elementMultiplier
         let isBigEndian = structure.isBigEndian
         
@@ -214,7 +214,7 @@ class HeightmapTessellator {
                     longitude = Math.toRadians(degrees: longitude)
                 }
                 
-                let terrainOffset = row * (width * stride) + col * stride
+                let terrainOffset = row * (width * increment) + col * increment
                 
                 var heightSample: Double
                 if elementsPerHeight == 1 {
@@ -223,11 +223,11 @@ class HeightmapTessellator {
                     heightSample = 0
                     
                     if isBigEndian {
-                        for elementOffset in 0.stride(to: elementsPerHeight, by: 1) {
+                        for elementOffset in stride(from: 0, to: elementsPerHeight, by: 1) {
                             heightSample = (heightSample * elementMultiplier) + Double(heightmap[terrainOffset + elementOffset])
                         }
                     } else {
-                        for elementOffset in (elementsPerHeight - 1).stride(through: 0, by: -1) {
+                        for elementOffset in stride(from: elementsPerHeight - 1, through: 0, by: -1) {
                             heightSample = (heightSample * elementMultiplier) + Double(heightmap[terrainOffset + elementOffset])
                         }
                     }
@@ -267,7 +267,7 @@ class HeightmapTessellator {
                 let u = (longitude - geographicWest) / (geographicEast - geographicWest)
                 uvs.append(Cartesian2(x: u, y: v))
                 
-                let point = toENU.multiplyByPoint(position)
+                let point = toENU.multiply(point: position)
                 minimum = point.minimumByComponent(minimum)
                 maximum = point.maximumByComponent(maximum)
                 hMin = min(hMin, heightSample)

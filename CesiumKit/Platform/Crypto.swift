@@ -12,15 +12,15 @@ import CommonCrypto
 public struct HMAC {
     
     static func hash(inp: String, algo: HMACAlgo) -> String {
-        if let stringData = inp.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false) {
-            return hexStringFromBuffer(digest(stringData, algo: algo))
+        if let stringData = inp.data(using: NSUTF8StringEncoding, allowLossyConversion: false) {
+            return hexStringFromBuffer(input: digest(input: stringData, algo: algo))
         }
         return ""
     }
     
     private static func digest(input : NSData, algo: HMACAlgo) -> [UInt8] {
         let digestLength = algo.digestLength()
-        var hash = [UInt8](count: digestLength, repeatedValue: 0)
+        var hash = [UInt8](repeating: 0, count: digestLength)
         switch algo {
         case .MD5:
             CC_MD5(input.bytes, UInt32(input.length), &hash)

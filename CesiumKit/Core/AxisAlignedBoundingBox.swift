@@ -51,7 +51,7 @@ struct AxisAlignedBoundingBox: Equatable {
             self.center = center
         } else {
             //If center was not defined, compute it.
-            self.center = minimum.add(maximum).multiplyByScalar(0.5)
+            self.center = minimum.add(maximum).multiply(scalar: 0.5)
         }
     }
     /*

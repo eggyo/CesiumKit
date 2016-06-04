@@ -306,7 +306,7 @@ struct Transforms {
         // GMST is actually computed using UT1.  We're using UTC as an approximation of UT1.
         // We do not want to use the function like convertTaiToUtc in JulianDate because
         // we explicitly do not want to fail when inside the leap second.
-        let dateInUtc = date.addSeconds(Double(-date.computeTaiMinusUtc()))
+        let dateInUtc = date.add(seconds: Double(-date.computeTaiMinusUtc()))
         
         let utcDayNumber = Double(dateInUtc.dayNumber)
         let utcSecondsIntoDay = dateInUtc.secondsOfDay
@@ -320,9 +320,9 @@ struct Transforms {
         }
         
         let gmst0 = _gmstConstant0 + t * (_gmstConstant1 + t * (_gmstConstant2 + t * _gmstConstant3))
-        let angle = (gmst0 * _twoPiOverSecondsInDay) % Math.TwoPi
+        let angle = (gmst0 * _twoPiOverSecondsInDay).truncatingRemainder(dividingBy: Math.TwoPi)
         let ratio = _wgs84WRPrecessing + _rateCoef * (utcDayNumber - 2451545.5)
-        let secondsSinceMidnight = (utcSecondsIntoDay + TimeConstants.SecondsPerDay * 0.5) % TimeConstants.SecondsPerDay
+        let secondsSinceMidnight = (utcSecondsIntoDay + TimeConstants.SecondsPerDay * 0.5).truncatingRemainder(dividingBy: TimeConstants.SecondsPerDay)
         let gha = angle + (ratio * secondsSinceMidnight)
         let cosGha = cos(gha)
         let sinGha = sin(gha)
@@ -421,7 +421,7 @@ struct Transforms {
     * });
     */
     static func computeIcrfToFixedMatrix (date: JulianDate) -> Matrix3? {
-        guard let fixedToIcrfMtx: Matrix3 = Transforms.computeFixedToIcrfMatrix(date) else {
+        guard let fixedToIcrfMtx: Matrix3 = Transforms.computeFixedToIcrfMatrix(date: date) else {
             return nil
         }
         return fixedToIcrfMtx.transpose
@@ -572,9 +572,9 @@ struct Transforms {
 
     static func pointToGLWindowCoordinates (modelViewProjectionMatrix modelViewProjectionMatrix: Matrix4, viewportTransformation: Matrix4, point: Cartesian3) -> Cartesian2 {
         
-        var coords = modelViewProjectionMatrix.multiplyByVector(Cartesian4(x: point.x, y: point.y, z: point.z, w: 1))
-        coords.multiplyByScalar(1.0 / coords.w)
-        coords = viewportTransformation.multiplyByVector(coords)
+        var coords = modelViewProjectionMatrix.multiply(vector: Cartesian4(x: point.x, y: point.y, z: point.z, w: 1))
+        coords.multiply(scalar: 1.0 / coords.w)
+        coords = viewportTransformation.multiply(vector: coords)
         
         return Cartesian2(cartesian4: coords)
     }

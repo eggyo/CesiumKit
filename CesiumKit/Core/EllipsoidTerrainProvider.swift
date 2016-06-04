@@ -109,7 +109,7 @@ class EllipsoidTerrainProvider: TerrainProvider {
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
-    func levelMaximumGeometricError(level: Int) -> Double {
+    func maximumGeometricErrorFor (level: Int) -> Double {
         return _levelZeroMaximumGeometricError / Double(1 << level)
     }
 

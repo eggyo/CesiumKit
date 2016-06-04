@@ -72,7 +72,7 @@ class ComputeEngine {
         passState.framebuffer = framebuffer
         
         let vertexArray = computeCommand.vertexArray ?? context.getViewportQuadVertexArray()
-        let pipeline = computeCommand.pipeline ?? createViewportQuadPipeline(computeCommand.fragmentShaderSource!)
+        let pipeline = computeCommand.pipeline ?? createViewportQuadPipeline(fragmentShaderSource: computeCommand.fragmentShaderSource!)
         let renderState = RenderState(
             device: context.device,
             viewport: Cartesian4(x: 0, y: 0, width: Double(outputTexture.width), height: Double(outputTexture.height)))
@@ -80,7 +80,7 @@ class ComputeEngine {
         
         var clearCommand = ClearCommand(color: Cartesian4(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
         clearCommand.renderState = renderState
-        clearCommand.execute(context, passState: passState)
+        clearCommand.execute(context: context, passState: passState)
         
         let drawCommand = DrawCommand()
         drawCommand.vertexArray = vertexArray
@@ -88,11 +88,11 @@ class ComputeEngine {
         drawCommand.pipeline = pipeline
         drawCommand.uniformMap = computeCommand.uniformMap
         if let map = drawCommand.uniformMap {
-            map.uniformBufferProvider = drawCommand.pipeline!.shaderProgram.createUniformBufferProvider(context.device, deallocationBlock: nil)
+            map.uniformBufferProvider = drawCommand.pipeline!.shaderProgram.createUniformBufferProvider(device: context.device, deallocationBlock: nil)
         }
         
-        let renderPass = context.createRenderPass(passState)
-        drawCommand.execute(context, renderPass: renderPass)
+        let renderPass = context.createRenderPass(passState: passState)
+        drawCommand.execute(in: context, renderPass: renderPass)
         renderPass.complete()
         //FIXME: postExecute
         if let postExecute = computeCommand.postExecute {

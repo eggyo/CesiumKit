@@ -229,7 +229,7 @@ public class ImageryLayer {
      * });
      */
     func getViewableRectangle () -> Rectangle? {
-        return imageryProvider.rectangle.intersection(_rectangle)
+        return imageryProvider.rectangle.intersection(other: _rectangle)
     }
     
     /**
@@ -262,8 +262,8 @@ public class ImageryLayer {
             // Instead, add a placeholder so that we'll know to create
             // the skeletons once the provider is ready.
             _skeletonPlaceholder.loadingImagery!.addReference()
-            surfaceTile.imagery.removeAtIndex(insertionPoint!)
-            surfaceTile.imagery.insert(_skeletonPlaceholder, atIndex: insertionPoint!)
+            surfaceTile.imagery.remove(at: insertionPoint!)
+            surfaceTile.imagery.insert(_skeletonPlaceholder, at: insertionPoint!)
             return true
         }
         
@@ -271,8 +271,8 @@ public class ImageryLayer {
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the rectangle.  The imagery TilingScheme's rectangle
         // always fully contains the ImageryProvider's rectangle.
-        let imageryBounds = imageryProvider.rectangle.intersection(_rectangle)
-        var overlapRectangle = tile.rectangle.intersection(imageryBounds!)
+        let imageryBounds = imageryProvider.rectangle.intersection(other: _rectangle)
+        var overlapRectangle = tile.rectangle.intersection(other: imageryBounds!)
         
         var rectangle = Rectangle(west: 0.0, south: 0.0, east: 0.0, north:0.0)
         
@@ -326,7 +326,7 @@ public class ImageryLayer {
         // But first we need configurable imagery SSE and we need the rendering to be able to handle more
         // images attached to a terrain tile than there are available texture units.  So that's for the future.
         let errorRatio = 1.0
-        let targetGeometricError = errorRatio * terrainProvider.levelMaximumGeometricError(tile.level)
+        let targetGeometricError = errorRatio * terrainProvider.maximumGeometricErrorFor(level: tile.level)
         var imageryLevel = levelWithMaximumTexelSpacing(texelSpacing: targetGeometricError, latitudeClosestToEquator: latitudeClosestToEquator)
         imageryLevel = max(0, imageryLevel)
         let maximumLevel = imageryProvider.maximumLevel
@@ -374,7 +374,7 @@ public class ImageryLayer {
         // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
         let terrainRectangle = tile.rectangle
         var imageryRectangle = imageryTilingScheme.tileXYToRectangle(x: northwestTileCoordinates.x, y: northwestTileCoordinates.y, level: imageryLevel)
-        var clippedImageryRectangle = imageryRectangle.intersection(imageryBounds!)!
+        var clippedImageryRectangle = imageryRectangle.intersection(other: imageryBounds!)!
         
         var minU: Double
         var maxU = 0.0
@@ -399,7 +399,7 @@ public class ImageryLayer {
             minU = maxU
             
             imageryRectangle = imageryTilingScheme.tileXYToRectangle(x: i, y: northwestTileCoordinates.y, level: imageryLevel)
-            clippedImageryRectangle = imageryRectangle.intersection(imageryBounds!)!
+            clippedImageryRectangle = imageryRectangle.intersection(other: imageryBounds!)!
             
             maxU = min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / terrainRectangle.width)
             
@@ -417,7 +417,7 @@ public class ImageryLayer {
                 maxV = minV
                 
                 imageryRectangle = imageryTilingScheme.tileXYToRectangle(x: i, y: j, level: imageryLevel)
-                clippedImageryRectangle = imageryRectangle.intersection(imageryBounds!)!
+                clippedImageryRectangle = imageryRectangle.intersection(other: imageryBounds!)!
                 
                 minV = max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height)
                 
@@ -431,7 +431,7 @@ public class ImageryLayer {
                 
                 let texCoordsRectangle = Cartesian4(x: minU, y: minV, z: maxU, w: maxV)
                 let imagery = getImageryFromCache(level: imageryLevel, x: i, y: j, imageryRectangle: imageryRectangle)
-                surfaceTile.imagery.insert(TileImagery(imagery: imagery, textureCoordinateRectangle: texCoordsRectangle), atIndex: insertionPoint!)
+                surfaceTile.imagery.insert(TileImagery(imagery: imagery, textureCoordinateRectangle: texCoordsRectangle), at: insertionPoint!)
                 insertionPoint! += 1
             }
         }
@@ -473,7 +473,7 @@ public class ImageryLayer {
      *
      * @param {Imagery} imagery The imagery to request.
      */
-    func requestImagery (imagery: Imagery) {
+    func request (imagery: Imagery) {
         
         imagery.state = .Transitioning
         
@@ -526,7 +526,7 @@ public class ImageryLayer {
                 }
                 
                 // Mark discarded imagery tiles invalid.  Parent imagery will be used instead.
-                if (discardPolicy.shouldDiscardImage(imagery.image!)) {
+                if (discardPolicy.shouldDiscardImage(image: imagery.image!)) {
                     dispatch_async(dispatch_get_main_queue(), {
                         imagery.state = .Invalid
                     })
@@ -534,7 +534,7 @@ public class ImageryLayer {
                 }
             }
             // Imagery does not need to be discarded, so upload it to GL.
-            let texture = Texture(context: context, options: TextureOptions(
+            let texture = Texture(context: context!, options: TextureOptions(
                 source : .Image(imagery.image!),
                 pixelFormat: .RGBA8Unorm,
                 flipY: true, // CGImage
@@ -578,18 +578,18 @@ public class ImageryLayer {
                 // Update render resources right before execution instead of now.
                 // This allows different ImageryLayers to share the same vao and buffers.
                 preExecute: { command in
-                    self.reprojectToGeographic(command, context: context, texture: texture, rectangle: rectangle)
+                    self.reprojectToGeographic(command: command, context: context, texture: texture, rectangle: rectangle)
                 },
                 postExecute: { outputTexture in
                     imagery.texture = outputTexture
-                    self.finalizeReprojectTexture(context, imagery: imagery, texture: outputTexture)
+                    self.finalizeReprojectTexture(context: context, imagery: imagery, texture: outputTexture)
                 },
                 persists: true,
                 owner : self
             )
             _reprojectComputeCommands.append(computeCommand)
         } else {
-            finalizeReprojectTexture(context, imagery: imagery, texture: texture)
+            finalizeReprojectTexture(context: context, imagery: imagery, texture: texture)
         }
         
     }
@@ -681,7 +681,7 @@ public class ImageryLayer {
      * @param {FrameState} frameState The frameState.
      */
     func queueReprojectionCommands (frameState: inout FrameState) {
-        frameState.commandList.appendContentsOf(_reprojectComputeCommands)
+        frameState.commandList.append(contentsOf: _reprojectComputeCommands)
         _reprojectComputeCommands.removeAll()
     }
     
@@ -709,7 +709,7 @@ public class ImageryLayer {
     
     func removeImageryFromCache (imagery: Imagery) {
         let cacheKey = getImageryCacheKey(level: imagery.level, x: imagery.x, y: imagery.y)
-        _imageryCache.removeValueForKey(cacheKey)
+        _imageryCache.removeValue(forKey: cacheKey)
     }
     
     private func getImageryCacheKey(level level: Int, x: Int, y: Int) -> String {
@@ -879,10 +879,10 @@ public class ImageryLayer {
         }
         let webMercatorTBuffer = Buffer(device: context.device, array: webMercatorT, componentDatatype: .Float32, sizeInBytes: webMercatorT.sizeInBytes)
         
-        var attributes = reproject.vertexAttributes
+        var attributes = reproject!.vertexAttributes
         attributes[1].buffer = webMercatorTBuffer
         
-        let vertexArray = VertexArray(attributes: attributes, vertexCount: 128, indexBuffer: reproject.indexBuffer)
+        let vertexArray = VertexArray(attributes: attributes, vertexCount: 128, indexBuffer: reproject!.indexBuffer)
         
         let textureUsage: TextureUsage = [.RenderTarget, .ShaderRead]
         
@@ -896,9 +896,9 @@ public class ImageryLayer {
                 usage: textureUsage
             )
         )
-        outputTexture.sampler = reproject.sampler
+        outputTexture.sampler = reproject!.sampler
         
-        command.pipeline = reproject.pipeline
+        command.pipeline = reproject?.pipeline
         command.outputTexture = outputTexture
         command.uniformMap = uniformMap
         command.vertexArray = vertexArray
@@ -916,7 +916,7 @@ public class ImageryLayer {
         let tilingScheme = imageryProvider.tilingScheme
         let latitudeFactor = !(tilingScheme is GeographicTilingScheme) ? cos(latitudeClosestToEquator) : 1.0
         
-        let levelZeroMaximumTexelSpacing = tilingScheme.ellipsoid.maximumRadius * tilingScheme.rectangle.width * latitudeFactor / Double(imageryProvider.tileWidth * tilingScheme.numberOfXTilesAtLevel(0))
+        let levelZeroMaximumTexelSpacing = tilingScheme.ellipsoid.maximumRadius * tilingScheme.rectangle.width * latitudeFactor / Double(imageryProvider.tileWidth * tilingScheme.numberOfXTilesAt(level: 0))
         
         let twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
         let level = log(twoToTheLevelPower) / log(2)

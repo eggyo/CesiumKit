@@ -755,7 +755,7 @@ Matrix4.getElementIndex = function(column, row) {
     * @param {Cartesian4} result The object onto which to store the result.
     * @returns {Matrix4} The modified result parameter.
     */
-    func setTranslation (translation: Cartesian3) -> Matrix4 {
+    func set (translation: Cartesian3) -> Matrix4 {
         var result = simdType
         result[3] = double4(translation.x, translation.y, translation.z, simdType[3].w)
         return Matrix4(simd: result)
@@ -805,7 +805,7 @@ Matrix4.getElementIndex = function(column, row) {
      * @param {MatrixType} other The second matrix.
      * @returns {MatrixType} The modified result parameter.
      */
-    func multiply(other: Matrix4) -> Matrix4 {
+    func multiply(_ other: Matrix4) -> Matrix4 {
         return Matrix4(simd: simdType * other.simdType)
     }
     
@@ -824,7 +824,7 @@ Matrix4.getElementIndex = function(column, row) {
      * @param {MatrixType} [right] The right hand side matrix.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
-    func equals(other: Matrix4) -> Bool {
+    func equals(_ other: Matrix4) -> Bool {
         return matrix_equal(simdType.cmatrix, other.simdType.cmatrix)
     }
     
@@ -1243,7 +1243,7 @@ Matrix4.multiplyByScale = function(matrix, scale, result) {
      * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter.
      */
-    func multiplyBy(vector: Cartesian4) -> Cartesian4 {
+    func multiply(vector: Cartesian4) -> Cartesian4 {
         return Cartesian4(simd: self.simdType * vector.simdType)
     }
 
@@ -1263,9 +1263,9 @@ Matrix4.multiplyByScale = function(matrix, scale, result) {
     * //   Cartesian3 p = ...
     * //   Cesium.Matrix4.multiplyByVector(matrix, new Cesium.Cartesian4(p.x, p.y, p.z, 0.0), result);
     */
-    func multiplyByPointAsVector (cartesian: Cartesian3) -> Cartesian3 {
-        let vector = simdType * double4(cartesian.x, cartesian.y, cartesian.z, 0.0)
-        return Cartesian3(x: vector.x, y: vector.y, z: vector.z)
+    func multiply (pointAsVector vector: Cartesian3) -> Cartesian3 {
+        let vector4 = simdType * double4(vector.x, vector.y, vector.z, 0.0)
+        return Cartesian3(x: vector4.x, y: vector4.y, z: vector4.z)
     }
 
     /**
@@ -1281,7 +1281,7 @@ Matrix4.multiplyByScale = function(matrix, scale, result) {
      * var p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
      * Cesium.Matrix4.multiplyByPoint(matrix, p, result);
      */
-    func multiplyByPoint (_ cartesian: Cartesian3) -> Cartesian3 {
+    func multiply (point cartesian: Cartesian3) -> Cartesian3 {
         let vector = simdType * double4(cartesian.x, cartesian.y, cartesian.z, 1.0)
         return Cartesian3(x: vector.x, y: vector.y, z: vector.z)
     }
@@ -1471,7 +1471,7 @@ Matrix4.abs = function(matrix, result) {
     * @private
     */
     func equalsArray (array: [Float], offset: Int) -> Bool {
-        let other = Matrix4.unpack(array, startingIndex: offset)
+        let other = Matrix4.unpack(array: array, startingIndex: offset)
         return self == other
     }
     
@@ -1489,7 +1489,7 @@ extension Matrix4: Packable {
     
     init(array: [Double], startingIndex: Int = 0) {
         self.init()
-        assert(checkPackedArrayLength(array, startingIndex: startingIndex), "Invalid packed array length")
+        assert(checkPackedArrayLength(array: array, startingIndex: startingIndex), "Invalid packed array length")
         array.withUnsafeBufferPointer { (pointer: UnsafeBufferPointer<Double>) in
             memcpy(&self, pointer.baseAddress, Matrix4.packedLength() * strideof(Double))
         }

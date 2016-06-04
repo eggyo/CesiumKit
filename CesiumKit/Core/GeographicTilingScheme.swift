@@ -164,7 +164,7 @@ class GeographicTilingScheme: TilingScheme {
      *          if 'result' is undefined.
      */
     func positionToTileXY(position position: Cartographic, level: Int) -> (x: Int, y: Int)? {
-        if !rectangle.contains(cartographic: position) {
+        if !rectangle.contains(position) {
             // outside the bounds of the tiling scheme
             return nil
         }

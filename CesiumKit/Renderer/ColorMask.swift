@@ -20,7 +20,7 @@ struct ColorMask {
     }
     
     func toMetal() -> MTLColorWriteMask {
-        let writeMask: MTLColorWriteMask =  [(red ? .Red : .None), (green ? .Green : .None),  (blue ? .Blue : .None), (alpha ? .Alpha : .None)]
+        let writeMask: MTLColorWriteMask = [(red ? .red : []), (green ? .green : []),  (blue ? .blue : []), (alpha ? .alpha : [])]
         return writeMask
     }
 }

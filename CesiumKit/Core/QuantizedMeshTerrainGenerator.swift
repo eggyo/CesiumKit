@@ -51,7 +51,7 @@ class QuantizedMeshTerrainGenerator {
         let minimumHeight = minimumHeight * exaggeration
         let maximumHeight = maximumHeight * exaggeration
         
-        let fromENU = Transforms.eastNorthUpToFixedFrame(center, ellipsoid: ellipsoid)
+        let fromENU = Transforms.eastNorthUpToFixedFrame(origin: center, ellipsoid: ellipsoid)
         let toENU = fromENU.inverse
         
         let uBuffer = quantizedVertices[0..<quantizedVertexCount]
@@ -88,7 +88,7 @@ class QuantizedMeshTerrainGenerator {
             heights.append(height)
             positions.append(position)
             
-            cartesian3Scratch = toENU.multiplyByPoint(position)
+            cartesian3Scratch = toENU.multiply(point: position)
            
             minimum = cartesian3Scratch.minimumByComponent(minimum)
             maximum = cartesian3Scratch.maximumByComponent(maximum)
@@ -108,10 +108,10 @@ class QuantizedMeshTerrainGenerator {
         }
         
         var hMin = minimumHeight
-        hMin = min(hMin, findMinMaxSkirts(westIndices, edgeHeight: westSkirtHeight, heights: heights, uvs: uvs, rectangle: rectangle, ellipsoid: ellipsoid, toENU: toENU, minimum: &minimum, maximum: &maximum))
-        hMin = min(hMin, findMinMaxSkirts(southIndices, edgeHeight: southSkirtHeight, heights: heights, uvs: uvs, rectangle: rectangle, ellipsoid: ellipsoid, toENU: toENU, minimum: &minimum, maximum: &maximum))
-        hMin = min(hMin, findMinMaxSkirts(eastIndices, edgeHeight: eastSkirtHeight, heights: heights, uvs: uvs, rectangle: rectangle, ellipsoid: ellipsoid, toENU: toENU, minimum: &minimum, maximum: &maximum))
-        hMin = min(hMin, findMinMaxSkirts(northIndices, edgeHeight: northSkirtHeight, heights: heights, uvs: uvs, rectangle: rectangle, ellipsoid: ellipsoid, toENU: toENU, minimum: &minimum, maximum: &maximum))
+        hMin = min(hMin, findMinMaxSkirts(edgeIndices: westIndices, edgeHeight: westSkirtHeight, heights: heights, uvs: uvs, rectangle: rectangle, ellipsoid: ellipsoid, toENU: toENU, minimum: &minimum, maximum: &maximum))
+        hMin = min(hMin, findMinMaxSkirts(edgeIndices: southIndices, edgeHeight: southSkirtHeight, heights: heights, uvs: uvs, rectangle: rectangle, ellipsoid: ellipsoid, toENU: toENU, minimum: &minimum, maximum: &maximum))
+        hMin = min(hMin, findMinMaxSkirts(edgeIndices: eastIndices, edgeHeight: eastSkirtHeight, heights: heights, uvs: uvs, rectangle: rectangle, ellipsoid: ellipsoid, toENU: toENU, minimum: &minimum, maximum: &maximum))
+        hMin = min(hMin, findMinMaxSkirts(edgeIndices: northIndices, edgeHeight: northSkirtHeight, heights: heights, uvs: uvs, rectangle: rectangle, ellipsoid: ellipsoid, toENU: toENU, minimum: &minimum, maximum: &maximum))
         
         let aaBox = AxisAlignedBoundingBox(minimum: minimum, maximum: maximum, center: center)
         let encoding = TerrainEncoding(axisAlignedBoundingBox: aaBox, minimumHeight: hMin, maximumHeight: maximumHeight, fromENU: fromENU, hasVertexNormals: hasVertexNormals)
@@ -130,23 +130,22 @@ class QuantizedMeshTerrainGenerator {
                 
                 if exaggeration != 1.0 {
                     var normal = AttributeCompression.octDecode(x: toPackX, y: toPackY)
-                    let fromENUNormal = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch, ellipsoid: ellipsoid)
+                    let fromENUNormal = Transforms.eastNorthUpToFixedFrame(origin: cartesian3Scratch, ellipsoid: ellipsoid)
                     let toENUNormal = fromENUNormal.inverse
                     
-                    normal = toENUNormal.multiplyByPointAsVector(normal)
+                    normal = toENUNormal.multiply(pointAsVector: normal)
                     normal.z *= exaggeration
                     normal = normal.normalize()
                     
-                    normal = fromENUNormal.multiplyByPointAsVector(normal)
+                    normal = fromENUNormal.multiply(pointAsVector: normal)
                     normal = normal.normalize()
                     
-                    toPack = AttributeCompression.octEncode(normal)
+                    toPack = AttributeCompression.octEncode(vector: normal)
                 } else {
                     toPack = Cartesian2(x: Double(toPackX), y: Double(toPackY))
-                    
                 }
             }
-            encoding.encode(&vertexBuffer, position: positions[j], uv: uvs[j], height: heights[j], normalToPack: toPack)
+            encoding.encode(vertexBuffer: &vertexBuffer, position: positions[j], uv: uvs[j], height: heights[j], normalToPack: toPack)
         }
         
         //let edgeTriangleCount = max(0, (edgeVertexCount - 4) * 2)
@@ -156,10 +155,10 @@ class QuantizedMeshTerrainGenerator {
         var indexBuffer = indices
         let skirtIndex = indices.count
         // Add skirts.
-        addSkirt(&vertexBuffer, indexBuffer: &indexBuffer, edgeVertices: westIndices, encoding: encoding, heights: heights, uvs: uvs, octEncodedNormals: octEncodedNormals, ellipsoid: ellipsoid, rectangle: rectangle, skirtLength: westSkirtHeight, isWestOrNorthEdge: true, exaggeration: exaggeration)
-        addSkirt(&vertexBuffer, indexBuffer: &indexBuffer, edgeVertices: southIndices, encoding: encoding, heights: heights, uvs: uvs, octEncodedNormals: octEncodedNormals, ellipsoid: ellipsoid, rectangle: rectangle, skirtLength: southSkirtHeight, isWestOrNorthEdge: false, exaggeration: exaggeration)
-        addSkirt(&vertexBuffer, indexBuffer: &indexBuffer, edgeVertices: eastIndices, encoding: encoding, heights: heights, uvs: uvs, octEncodedNormals: octEncodedNormals, ellipsoid: ellipsoid, rectangle: rectangle, skirtLength: eastSkirtHeight, isWestOrNorthEdge: false, exaggeration: exaggeration)
-        addSkirt(&vertexBuffer, indexBuffer: &indexBuffer, edgeVertices: northIndices, encoding: encoding, heights: heights, uvs: uvs, octEncodedNormals: octEncodedNormals, ellipsoid: ellipsoid, rectangle: rectangle, skirtLength: northSkirtHeight, isWestOrNorthEdge: true, exaggeration: exaggeration)
+        addSkirt(vertexBuffer: &vertexBuffer, indexBuffer: &indexBuffer, edgeVertices: westIndices, encoding: encoding, heights: heights, uvs: uvs, octEncodedNormals: octEncodedNormals, ellipsoid: ellipsoid, rectangle: rectangle, skirtLength: westSkirtHeight, isWestOrNorthEdge: true, exaggeration: exaggeration)
+        addSkirt(vertexBuffer: &vertexBuffer, indexBuffer: &indexBuffer, edgeVertices: southIndices, encoding: encoding, heights: heights, uvs: uvs, octEncodedNormals: octEncodedNormals, ellipsoid: ellipsoid, rectangle: rectangle, skirtLength: southSkirtHeight, isWestOrNorthEdge: false, exaggeration: exaggeration)
+        addSkirt(vertexBuffer: &vertexBuffer, indexBuffer: &indexBuffer, edgeVertices: eastIndices, encoding: encoding, heights: heights, uvs: uvs, octEncodedNormals: octEncodedNormals, ellipsoid: ellipsoid, rectangle: rectangle, skirtLength: eastSkirtHeight, isWestOrNorthEdge: false, exaggeration: exaggeration)
+        addSkirt(vertexBuffer: &vertexBuffer, indexBuffer: &indexBuffer, edgeVertices: northIndices, encoding: encoding, heights: heights, uvs: uvs, octEncodedNormals: octEncodedNormals, ellipsoid: ellipsoid, rectangle: rectangle, skirtLength: northSkirtHeight, isWestOrNorthEdge: true, exaggeration: exaggeration)
 
         
 
@@ -205,7 +204,7 @@ class QuantizedMeshTerrainGenerator {
             east += Math.TwoPi
         }
         
-        for i in start.stride(to: end, by: increment) {
+        for i in stride(from: start, to: end, by: increment) {
             let index = edgeVertices[i]
             let h = heights[index]
             var uv = uvs[index]
@@ -227,22 +226,22 @@ class QuantizedMeshTerrainGenerator {
                 
                 if exaggeration != 1.0 {
                     var normal = AttributeCompression.octDecode(x: toPackX, y: toPackY)
-                    let fromENUNormal = Transforms.eastNorthUpToFixedFrame(position, ellipsoid: ellipsoid)
+                    let fromENUNormal = Transforms.eastNorthUpToFixedFrame(origin: position, ellipsoid: ellipsoid)
                     let toENUNormal = fromENUNormal.inverse
                     
-                    normal = toENUNormal.multiplyByPointAsVector(normal)
+                    normal = toENUNormal.multiply(pointAsVector: normal)
                     normal.z *= exaggeration
                     normal = normal.normalize()
                     
-                    normal = fromENUNormal.multiplyByPointAsVector(normal)
+                    normal = fromENUNormal.multiply(pointAsVector: normal)
                     normal = normal.normalize()
                     
-                    toPack = AttributeCompression.octEncode(normal)
+                    toPack = AttributeCompression.octEncode(vector: normal)
                 } else {
                     toPack = Cartesian2(x: Double(toPackX), y: Double(toPackY))
                 }
             }
-            encoding.encode(&vertexBuffer, position: position, uv: uv, height: cartographic.height, normalToPack: toPack)
+            encoding.encode(vertexBuffer: &vertexBuffer, position: position, uv: uv, height: cartographic.height, normalToPack: toPack)
             
             if (previousIndex != -1) {
                 indexBuffer.append(previousIndex)
@@ -283,7 +282,7 @@ class QuantizedMeshTerrainGenerator {
             )
 
             var position = ellipsoid.cartographicToCartesian(cartographic)
-            position = toENU.multiplyByPoint(position)
+            position = toENU.multiply(point: position)
             
             minimum = position.minimumByComponent(minimum)
             maximum = position.maximumByComponent(maximum)

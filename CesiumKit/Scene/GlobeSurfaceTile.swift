@@ -92,11 +92,11 @@ class GlobeSurfaceTile: QuadTreeTileData {
     
     func getPosition(encoding encoding: TerrainEncoding, mode: SceneMode? = nil, projection: MapProjection, vertices: [Float], index: Int) -> Cartesian3 {
         
-        var result = encoding.decodePosition(vertices, index: index)
+        var result = encoding.decodePosition(buffer: vertices, index: index)
         
         if mode != nil && mode != .Scene3D {
-            let positionCart = projection.ellipsoid.cartesianToCartographic(result)
-            result = projection.project(positionCart!)
+            let positionCart = projection.ellipsoid.cartesianToCartographic(cartesian: result)
+            result = projection.project(cartographic: positionCart!)
             result = Cartesian3(x: result.z, y: result.x, z: result.y)
         }
         
@@ -113,7 +113,7 @@ class GlobeSurfaceTile: QuadTreeTileData {
         let indices = mesh.indices
         let encoding = mesh.encoding
         let length = indices.count
-        for i in 0.stride(to: length, by: 3) {
+        for i in stride(from: 0, to: length, by: 3) {
             let i0 = indices[i]
             let i1 = indices[i + 1]
             let i2 = indices[i + 2]
@@ -122,7 +122,7 @@ class GlobeSurfaceTile: QuadTreeTileData {
             let v1 = getPosition(encoding: encoding, mode: mode, projection: projection, vertices: vertices, index: i1)
             let v2 = getPosition(encoding: encoding, mode: mode, projection: projection, vertices: vertices, index: i2)
             
-            let intersection = IntersectionTests.rayTriangle(ray, p0: v0, p1: v1, p2: v2, cullBackFaces: cullBackFaces)
+            let intersection = IntersectionTests.rayTriangle(ray: ray, p0: v0, p1: v1, p2: v2, cullBackFaces: cullBackFaces)
             if intersection != nil {
                 return intersection
             }
@@ -177,12 +177,12 @@ class GlobeSurfaceTile: QuadTreeTileData {
         let surfaceTile = tile.data
         
         if tile.state == .Start {
-            GlobeSurfaceTile.prepareNewTile(tile, terrainProvider: terrainProvider, imageryLayerCollection: imageryLayerCollection)
+            GlobeSurfaceTile.prepareNewTile(tile: tile, terrainProvider: terrainProvider, imageryLayerCollection: imageryLayerCollection)
             tile.state = .Loading
         }
         
         if tile.state == .Loading {
-            GlobeSurfaceTile.processTerrainStateMachine(tile, frameState: frameState, terrainProvider: terrainProvider)
+            GlobeSurfaceTile.processTerrainStateMachine(tile: tile, frameState: frameState, terrainProvider: terrainProvider)
         }
         
         // The terrain is renderable as soon as we have a valid vertex array.
@@ -211,15 +211,15 @@ class GlobeSurfaceTile: QuadTreeTileData {
                 if (imageryLayer.imageryProvider.ready) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
-                    tileImageryCollection.removeAtIndex(i)
-                    imageryLayer.createTileImagerySkeletons(tile, terrainProvider: terrainProvider, insertionPoint: i)
+                    tileImageryCollection.remove(at: i)
+                    imageryLayer.createTileImagerySkeletons(tile: tile, terrainProvider: terrainProvider, insertionPoint: i)
                     continue
                 } else {
                     isUpsampledOnly = false
                 }
             }
             
-            let thisTileDoneLoading = tileImagery.processStateMachine(tile, frameState: &frameState)
+            let thisTileDoneLoading = tileImagery.processStateMachine(tile: tile, frameState: &frameState)
             if thisTileDoneLoading {
                 // update cached draw commands
                 tile.invalidateCommandCache = true
@@ -252,11 +252,11 @@ class GlobeSurfaceTile: QuadTreeTileData {
     class func prepareNewTile (tile: QuadtreeTile, terrainProvider: TerrainProvider, imageryLayerCollection: ImageryLayerCollection) {
         let surfaceTile = tile.data!
         
-        if let upsampleTileDetails = GlobeSurfaceTile.getUpsampleTileDetails(tile) {
+        if let upsampleTileDetails = GlobeSurfaceTile.getUpsampleTileDetails(tile: tile) {
             surfaceTile.upsampledTerrain = TileTerrain(upsampleDetails: upsampleTileDetails)
         }
         
-        if isDataAvailable(tile, terrainProvider: terrainProvider) {
+        if isDataAvailable(tile: tile, terrainProvider: terrainProvider) {
             surfaceTile.loadedTerrain = TileTerrain()
         }
         
@@ -265,7 +265,7 @@ class GlobeSurfaceTile: QuadTreeTileData {
         for i in 0..<imageryLayerCollection.count {
             if let layer = imageryLayerCollection[i] {
                 if layer.show {
-                    layer.createTileImagerySkeletons(tile, terrainProvider: terrainProvider)
+                    layer.createTileImagerySkeletons(tile: tile, terrainProvider: terrainProvider)
                 }
             }
         }
@@ -288,15 +288,15 @@ class GlobeSurfaceTile: QuadTreeTileData {
                     
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    surfaceTile.createWaterMaskTextureIfNeeded(frameState.context)
+                    surfaceTile.createWaterMaskTextureIfNeeded(context: frameState.context)
                     
-                    GlobeSurfaceTile.propagateNewLoadedDataToChildren(tile)
+                    GlobeSurfaceTile.propagateNewLoadedDataToChildren(tile: tile)
                 }
                 suspendUpsampling = true
             }
             
             if loaded.state == .Ready {
-                loaded.publishToTile(tile)
+                loaded.publishToTile(tile: tile)
                 
                 // No further loading or upsampling is necessary.
                 surfaceTile.pickTerrain = surfaceTile.loadedTerrain ?? surfaceTile.upsampledTerrain
@@ -324,13 +324,13 @@ class GlobeSurfaceTile: QuadTreeTileData {
                 // If the terrain provider has a water mask, "upsample" that as well
                 // by computing texture translation and scale.
                 if (terrainProvider.hasWaterMask) {
-                    upsampleWaterMask(tile)
+                    upsampleWaterMask(tile: tile)
                 }
-                GlobeSurfaceTile.propagateNewUpsampledDataToChildren(tile)
+                GlobeSurfaceTile.propagateNewUpsampledDataToChildren(tile: tile)
                 
             }
             if upsampled.state == .Ready {
-                upsampled.publishToTile(tile)
+                upsampled.publishToTile(tile: tile)
                 // No further upsampling is necessary.  We need to continue loading, though.
                 surfaceTile.pickTerrain = surfaceTile.upsampledTerrain
                 surfaceTile.upsampledTerrain = nil
@@ -418,7 +418,7 @@ class GlobeSurfaceTile: QuadTreeTileData {
                     level : tile.level)
                 )
                 
-                if surfaceTile.terrainData!.isChildAvailable(tile.x, thisY: tile.y, childX: childTile.x, childY: childTile.y) {
+                if surfaceTile.terrainData!.isChildAvailable(thisX: tile.x, thisY: tile.y, childX: childTile.x, childY: childTile.y) {
                     // Data is available for the child now.  It might have been before, too.
                     if childSurfaceTile.loadedTerrain == nil {
                         // No load process is in progress, so start one.
@@ -444,7 +444,7 @@ class GlobeSurfaceTile: QuadTreeTileData {
             // child tile is not available.
             return false
         }
-        return parent!.data!.terrainData!.isChildAvailable(parent!.x, thisY: parent!.y, childX: tile.x, childY: tile.y)
+        return parent!.data!.terrainData!.isChildAvailable(thisX: parent!.x, thisY: parent!.y, childX: tile.x, childY: tile.y)
     }
     
     func getContextWaterMaskData(context: Context) -> (allWaterTexture: Texture, sampler: Sampler) {
@@ -484,7 +484,7 @@ class GlobeSurfaceTile: QuadTreeTileData {
             return
         }
         
-        let waterMaskData = getContextWaterMaskData(context)
+        let waterMaskData = getContextWaterMaskData(context: context)
         
         let texture: Texture
         let waterMaskLength = waterMask.count
@@ -504,10 +504,10 @@ class GlobeSurfaceTile: QuadTreeTileData {
 
             // flip water mask for Metal
             var flippedMask = [UInt8]()
-            for i in (textureSize-1).stride(through: 0, by: -1) {
+            for i in stride(from: textureSize-1, through: 0, by: -1) {
                 let rowRange = (i * textureSize)..<(i * textureSize + textureSize)
                 let slice = waterMask[rowRange]
-                flippedMask.appendContentsOf(slice)
+                flippedMask.append(contentsOf: slice)
             }
             
             texture = Texture(

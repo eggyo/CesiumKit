@@ -268,7 +268,7 @@ class EllipsoidGeodesic {
         _constants.distanceRatio = distanceRatio
     }
     
-    private func computeDeltaLambda(f f: Double, sineAlpha: Double, cosineSquaredAlpha: Double, sigma: Double, sineSigma: Double, cosineSigma: Double, cosineTwiceSigmaMidpoint: Double) -> Double {
+    private func computeDeltaLambda(f: Double, sineAlpha: Double, cosineSquaredAlpha: Double, sigma: Double, sineSigma: Double, cosineSigma: Double, cosineTwiceSigmaMidpoint: Double) -> Double {
         let C = computeC(f: f, cosineSquaredAlpha: cosineSquaredAlpha)
         
         return (1.0 - C) * f * sineAlpha * (sigma + C * sineSigma * (cosineTwiceSigmaMidpoint +
@@ -285,10 +285,10 @@ class EllipsoidGeodesic {
      * @param {Number} fraction The portion of the distance between the initial and final points.
      * @returns {Cartographic} The location of the point along the geodesic.
      */
-    func interpolateUsingFraction (fraction: Double) -> Cartographic {
+    func interpolateUsing (fraction: Double) -> Cartographic {
         assert(fraction >= 0.0 && fraction <= 1.0, "fraction out of bounds")
         assert(_distance != nil, "start and end must be set before calling funciton interpolateUsingSurfaceDistance")
-        return interpolateUsingSurfaceDistance(_distance! * fraction)
+        return interpolateUsing(surfaceDistance: _distance! * fraction)
     }
     
     /**
@@ -299,12 +299,12 @@ class EllipsoidGeodesic {
      *
      * @exception {DeveloperError} start and end must be set before calling funciton interpolateUsingSurfaceDistance
      */
-    func interpolateUsingSurfaceDistance (distance: Double) -> Cartographic {
+    func interpolateUsing (surfaceDistance: Double) -> Cartographic {
         assert(_distance != nil, "start and end must be set before calling funciton interpolateUsingSurfaceDistance")
         
         let constants = _constants
         
-        let s = constants.distanceRatio + distance / constants.b
+        let s = constants.distanceRatio + surfaceDistance / constants.b
         
         let cosine2S = cos(2.0 * s)
         let cosine4S = cos(4.0 * s)

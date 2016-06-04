@@ -166,8 +166,8 @@ class Globe {
     
     func createComparePickTileFunction(rayOrigin: Cartesian3) -> ((GlobeSurfaceTile, GlobeSurfaceTile) -> Bool) {
         func comparePickTileFunction(a: GlobeSurfaceTile, b: GlobeSurfaceTile) -> Bool {
-            let aDist = a.pickBoundingSphere.distanceSquaredTo(rayOrigin)
-            let bDist = b.pickBoundingSphere.distanceSquaredTo(rayOrigin)
+            let aDist = a.pickBoundingSphere.distanceSquaredTo(cartesian: rayOrigin)
+            let bDist = b.pickBoundingSphere.distanceSquaredTo(cartesian: rayOrigin)
             return aDist < bDist
         }
         return comparePickTileFunction
@@ -210,15 +210,15 @@ class Globe {
                 boundingVolume = tileData.boundingSphere3D
             }
             
-            if IntersectionTests.raySphere(ray, sphere: boundingVolume) != nil {
+            if IntersectionTests.raySphere(ray: ray, sphere: boundingVolume) != nil {
                 sphereIntersections.append(tileData)
             }
         }
         
-        sphereIntersections.sortInPlace(createComparePickTileFunction(ray.origin))
+        sphereIntersections.sort(isOrderedBefore: createComparePickTileFunction(rayOrigin: ray.origin))
         
         for sphereIntersection in sphereIntersections {
-            if let intersection = sphereIntersection.pick(ray, mode: scene.mode, projection: scene.mapProjection, cullBackFaces: true) {
+            if let intersection = sphereIntersection.pick(ray: ray, mode: scene.mode, projection: scene.mapProjection, cullBackFaces: true) {
                 return intersection
             }
         }
@@ -351,7 +351,7 @@ class Globe {
                         // url changed while we were loading
                         return
                     }
-                    guard let oceanNormalMapImage = CGImage.fromData(oceanMapOperation.data) else {
+                    guard let oceanNormalMapImage = CGImage.from(data: oceanMapOperation.data) else {
                         self._oceanNormalMap = nil
                         return
                     }
@@ -394,7 +394,7 @@ class Globe {
             tileProvider.oceanNormalMap = _oceanNormalMap
             tileProvider.enableLighting = enableLighting
             
-            _surface.beginFrame(&frameState)
+            _surface.beginFrame(frameState: &frameState)
         }
         
         /*if (frameState.passes.pick && mode == .Scene3D) {
@@ -412,11 +412,11 @@ class Globe {
         }
         
         if (frameState.passes.render) {
-            _surface.update(&frameState)
+            _surface.update(frameState: &frameState)
         }
         
         if (frameState.passes.pick) {
-            _surface.update(&frameState)
+            _surface.update(frameState: &frameState)
         }
     }
     
@@ -425,7 +425,7 @@ class Globe {
             return
         }
         if frameState.passes.render {
-            _surface.endFrame(&frameState)
+            _surface.endFrame(frameState: &frameState)
         }
     }
 /**

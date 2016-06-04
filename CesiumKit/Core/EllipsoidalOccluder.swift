@@ -222,7 +222,7 @@ class EllipsoidalOccluder {
     * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
     */
     func computeHorizonCullingPointFromRectangle(rectangle: Rectangle, ellipsoid: Ellipsoid) -> Cartesian3? {
-        let positions = rectangle.subsample(ellipsoid: ellipsoid)
+        let positions = rectangle.subsample(ellipsoid)
         let bs = BoundingSphere(fromPoints: positions)
         
         // If the bounding sphere center is too close to the center of the occluder, it doesn't make

@@ -29,7 +29,7 @@ class RenderPipeline {
         self.shaderProgram = shaderProgram
         _descriptor = descriptor
         do {
-            let state = try device.newRenderPipelineStateWithDescriptor(_descriptor)
+            let state = try device.newRenderPipelineState(with: _descriptor)
             self.state = state
         } catch let error as NSError  {
             state = nil
@@ -44,7 +44,7 @@ class RenderPipeline {
     
     static func replaceCache (context: Context,  pipeline: RenderPipeline?, vertexShaderSource vss: ShaderSource, fragmentShaderSource fss: ShaderSource, vertexDescriptor vd: VertexDescriptor?, colorMask: ColorMask? = nil, depthStencil: Bool, blendingState: BlendingState? = nil) -> RenderPipeline? {
         
-        return context.pipelineCache.replaceRenderPipeline(pipeline, vertexShaderSource: vss, fragmentShaderSource: fss, vertexDescriptor: vd, colorMask: colorMask, depthStencil: depthStencil, blendingState: blendingState)
+        return context.pipelineCache.replaceRenderPipeline(pipeline: pipeline, vertexShaderSource: vss, fragmentShaderSource: fss, vertexDescriptor: vd, colorMask: colorMask, depthStencil: depthStencil, blendingState: blendingState)
     }
     
     static func withCompiledShader(context: Context, shaderSourceName: String, compiledMetalVertexName vertex: String, compiledMetalFragmentName fragment: String, uniformStructSize: Int, vertexDescriptor vd: VertexDescriptor?, colorMask: ColorMask? = nil, depthStencil: Bool, blendingState: BlendingState? = nil) -> RenderPipeline? {
@@ -52,6 +52,6 @@ class RenderPipeline {
     }
     
     func setUniforms(command: DrawCommand, device: MTLDevice, uniformState: UniformState) -> (fragmentOffset: Int, texturesValid: Bool, textures: [Texture]) {
-        return shaderProgram.setUniforms(command, uniformState: uniformState)
+        return shaderProgram.setUniforms(command: command, uniformState: uniformState)
     }
 }

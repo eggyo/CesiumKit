@@ -80,8 +80,8 @@ class WebMercatorTilingScheme: TilingScheme {
                 self.rectangleSouthwestInMeters = Cartesian3(x: -semimajorAxisTimesPi, y: -semimajorAxisTimesPi, z: 0.0)
                 self.rectangleNortheastInMeters = Cartesian3(x: semimajorAxisTimesPi, y: semimajorAxisTimesPi, z: 0.0)
             }
-            let southwest = self.projection.unproject(self.rectangleSouthwestInMeters)
-            let northeast = self.projection.unproject(self.rectangleNortheastInMeters)
+            let southwest = self.projection.unproject(cartesian: self.rectangleSouthwestInMeters)
+            let northeast = self.projection.unproject(cartesian: self.rectangleNortheastInMeters)
             self.rectangle = Rectangle(west: southwest.longitude, south: southwest.latitude,
                 east: northeast.longitude, north: northeast.latitude)
     }
@@ -93,7 +93,7 @@ class WebMercatorTilingScheme: TilingScheme {
     * @param {Number} level The level-of-detail.
     * @returns {Number} The number of tiles in the X direction at the given level.
     */
-    func numberOfXTilesAtLevel(level: Int) -> Int {
+    func numberOfXTilesAt(level: Int) -> Int {
         return self.numberOfLevelZeroTilesX << level
     }
     
@@ -103,7 +103,7 @@ class WebMercatorTilingScheme: TilingScheme {
     * @param {Number} level The level-of-detail.
     * @returns {Number} The number of tiles in the Y direction at the given level.
     */
-    func numberOfYTilesAtLevel(level: Int) -> Int {
+    func numberOfYTilesAt(level: Int) -> Int {
         return self.numberOfLevelZeroTilesY << level
     }
     
@@ -118,8 +118,8 @@ class WebMercatorTilingScheme: TilingScheme {
     *          is undefined.
     */
     func rectangleToNativeRectangle(rectangle: Rectangle) -> Rectangle {
-        let southwest = projection.project(rectangle.southwest)
-        let northeast = projection.project(rectangle.northeast)
+        let southwest = projection.project(cartographic: rectangle.southwest)
+        let northeast = projection.project(cartographic: rectangle.northeast)
         
         return Rectangle(west: southwest.x, south: southwest.y, east: northeast.x, north: northeast.y)
         
@@ -138,8 +138,8 @@ class WebMercatorTilingScheme: TilingScheme {
     *          if 'result' is undefined.
     */
     func tileXYToNativeRectangle(x x: Int, y: Int, level: Int) -> Rectangle {
-        let xTiles = numberOfXTilesAtLevel(level)
-        let yTiles = numberOfYTilesAtLevel(level)
+        let xTiles = numberOfXTilesAt(level: level)
+        let yTiles = numberOfYTilesAt(level: level)
         
         let xTileWidth = (rectangleNortheastInMeters.x - rectangleSouthwestInMeters.x) / Double(xTiles)
         let west = rectangleSouthwestInMeters.x + Double(x) * xTileWidth
@@ -166,8 +166,8 @@ class WebMercatorTilingScheme: TilingScheme {
     func tileXYToRectangle(x x: Int, y: Int, level: Int) -> Rectangle {
         var nativeRectangle = tileXYToNativeRectangle(x: x, y: y, level: level)
         
-        let southwest = projection.unproject(Cartesian3(x: nativeRectangle.west, y: nativeRectangle.south, z: 0.0))
-        let northeast = projection.unproject(Cartesian3(x: nativeRectangle.east, y: nativeRectangle.north, z: 0.0))
+        let southwest = projection.unproject(cartesian: Cartesian3(x: nativeRectangle.west, y: nativeRectangle.south, z: 0.0))
+        let northeast = projection.unproject(cartesian: Cartesian3(x: nativeRectangle.east, y: nativeRectangle.north, z: 0.0))
         
         nativeRectangle.west = southwest.longitude
         nativeRectangle.south = southwest.latitude
@@ -194,15 +194,15 @@ class WebMercatorTilingScheme: TilingScheme {
                 return nil
         }
         
-        let xTiles = numberOfXTilesAtLevel(level)
-        let yTiles = numberOfYTilesAtLevel(level)
+        let xTiles = numberOfXTilesAt(level: level)
+        let yTiles = numberOfYTilesAt(level: level)
         
         let overallWidth = rectangleNortheastInMeters.x - rectangleSouthwestInMeters.x
         let xTileWidth = overallWidth / Double(xTiles)
         let overallHeight = rectangleNortheastInMeters.y - rectangleSouthwestInMeters.y
         let yTileHeight = overallHeight / Double(yTiles)
         
-        let webMercatorPosition = projection.project(position)
+        let webMercatorPosition = projection.project(cartographic: position)
         let distanceFromWest = webMercatorPosition.x - rectangleSouthwestInMeters.x
         let distanceFromNorth = rectangleNortheastInMeters.y - webMercatorPosition.y
         

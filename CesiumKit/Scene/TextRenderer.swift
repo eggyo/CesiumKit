@@ -173,7 +173,7 @@ public class TextRenderer: Primitive {
         let context = frameState.context
 
         if _fontAtlas == nil {
-            _fontAtlas = FontAtlas.fromCache(context, fontName: fontName, pointSize: pointSize)
+            _fontAtlas = FontAtlas.fromCache(context: context, fontName: fontName, pointSize: pointSize)
         }
         
         guard let map = _command.uniformMap as? TextUniformMap else {
@@ -188,7 +188,7 @@ public class TextRenderer: Primitive {
 
         if _command.pipeline == nil {
             _command.pipeline = RenderPipeline.withCompiledShader(
-                context,
+                context: context,
                 shaderSourceName: "TextRenderer",
                 compiledMetalVertexName: "text_vertex_shade",
                 compiledMetalFragmentName: "text_fragment_shade",
@@ -197,7 +197,7 @@ public class TextRenderer: Primitive {
                 depthStencil: _offscreenTarget ? false : context.depthTexture,
                 blendingState: _blendingState
             )
-            map.uniformBufferProvider = _command.pipeline!.shaderProgram.createUniformBufferProvider(context.device, deallocationBlock: nil)
+            map.uniformBufferProvider = _command.pipeline!.shaderProgram.createUniformBufferProvider(device: context.device, deallocationBlock: nil)
         }
         
         if _rs == nil || _updateMesh {
@@ -217,7 +217,7 @@ public class TextRenderer: Primitive {
             _command.renderState = _rs
 
             let meshRect = CGRect(x: 0, y: 0, width: meshCGSize.width, height: meshCGSize.height)
-            _command.vertexArray = buildMesh(context, string: string, inRect: meshRect, withFontAtlas: _fontAtlas, atSize: Int(Double(pointSize)))
+            _command.vertexArray = buildMesh(context: context, string: string, inRect: meshRect, withFontAtlas: _fontAtlas, atSize: Int(Double(pointSize)))
             
             _updateMesh = false
         }
@@ -240,9 +240,9 @@ public class TextRenderer: Primitive {
         let stringRange = CFRangeMake(0, CFAttributedStringGetLength(attrString))
         CFAttributedStringSetAttribute(attrString, stringRange, kCTFontAttributeName, font)
         
-        let framesetter = CTFramesetterCreateWithAttributedString(attrString)
+        let framesetter = CTFramesetterCreateWithAttributedString(attrString!)
         var fitRange = CFRangeMake(0, 0)
-        let textSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), nil, CGSizeMake(CGFloat.max, CGFloat.max), &fitRange)
+        let textSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), nil, CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude), &fitRange)
         
         assert(stringRange == fitRange, "Core Text layout failed")
         return textSize
@@ -257,7 +257,7 @@ public class TextRenderer: Primitive {
         
         CFAttributedStringSetAttribute(attrString, stringRange, kCTFontAttributeName, font)
         
-        let rectPath = CGPathCreateWithRect(rect, nil)
+        let rectPath = CGPath(rect: rect, transform: nil)
         let framesetter = CTFramesetterCreateWithAttributedString(attrString)
         let frame = CTFramesetterCreateFrame(framesetter, stringRange, rectPath, nil)
         
@@ -274,18 +274,18 @@ public class TextRenderer: Primitive {
                 return
             }
             let glyphInfo = fontAtlas.glyphDescriptors[Int(glyph)]
-            let minX = Float(CGRectGetMinX(glyphBounds))
-            let maxX = Float(CGRectGetMaxX(glyphBounds))
-            let minY = Float(CGRectGetMinY(glyphBounds))
-            let maxY = Float(CGRectGetMaxY(glyphBounds))
+            let minX = Float(glyphBounds.minX)
+            let maxX = Float(glyphBounds.maxX)
+            let minY = Float(glyphBounds.minY)
+            let maxY = Float(glyphBounds.maxY)
             let minS = Float(glyphInfo.topLeftTexCoord.x)
             let maxS = Float(glyphInfo.bottomRightTexCoord.x)
             let minT = Float(glyphInfo.bottomRightTexCoord.y)
             let maxT = Float(glyphInfo.topLeftTexCoord.y)
-            vertices.appendContentsOf([ minX, maxY, 0, 1, minS, maxT])
-            vertices.appendContentsOf([ minX, minY, 0, 1, minS, minT])
-            vertices.appendContentsOf([ maxX, minY, 0, 1, maxS, minT])
-            vertices.appendContentsOf([ maxX, maxY, 0, 1, maxS, maxT])
+            vertices.append(contentsOf: [ minX, maxY, 0, 1, minS, maxT])
+            vertices.append(contentsOf: [ minX, minY, 0, 1, minS, minT])
+            vertices.append(contentsOf: [ maxX, minY, 0, 1, maxS, minT])
+            vertices.append(contentsOf: [ maxX, maxY, 0, 1, maxS, maxT])
             indices.append(glyphIndex * 4)
             indices.append(glyphIndex * 4 + 1)
             indices.append(glyphIndex * 4 + 2)
@@ -293,7 +293,7 @@ public class TextRenderer: Primitive {
             indices.append(glyphIndex * 4 + 3)
             indices.append(glyphIndex * 4)
         }
-        enumerateGlyphsInFrame(frame, usingBlock: glyphEnumeratorBlock)
+        enumerateGlyphsInFrame(frame: frame, usingBlock: glyphEnumeratorBlock)
         
         let vertexBuffer = Buffer(device: context.device, array: &vertices, componentDatatype: .Float32, sizeInBytes: vertices.sizeInBytes)
         vertexBuffer.metalBuffer.label =  "Text Mesh Vertices"
@@ -327,16 +327,16 @@ public class TextRenderer: Primitive {
         let entire = CFRangeMake(0, 0)
         
         let framePath = CTFrameGetPath(frame)
-        let frameBoundingRect = CGPathGetPathBoundingBox(framePath)
+        let frameBoundingRect = framePath.boundingBoxOfPath
         
         let lines = (CTFrameGetLines(frame) as NSArray) as! [CTLine]
         
-        var lineOriginBuffer = [CGPoint](count: lines.count, repeatedValue: CGPoint())
+        var lineOriginBuffer = [CGPoint](repeating: CGPoint(), count: lines.count)
         CTFrameGetLineOrigins(frame, entire, &lineOriginBuffer)
         
         var glyphIndexInFrame: CFIndex = 0
         
-        for (lineIndex, line) in lines.enumerate() {
+        for (lineIndex, line) in lines.enumerated() {
             let lineOrigin = lineOriginBuffer[lineIndex]
             
             let runs = (CTLineGetGlyphRuns(line) as NSArray) as! [CTRun]
@@ -345,10 +345,10 @@ public class TextRenderer: Primitive {
                 
                 let glyphCount = CTRunGetGlyphCount(run)
                 
-                var glyphBuffer = [CGGlyph](count: glyphCount, repeatedValue: 0)
+                var glyphBuffer = [CGGlyph](repeating: 0, count: glyphCount)
                 CTRunGetGlyphs(run, entire, &glyphBuffer);
                 
-                var positionBuffer = [CGPoint](count: glyphCount, repeatedValue: CGPoint())
+                var positionBuffer = [CGPoint](repeating: CGPoint(), count: glyphCount)
                 CTRunGetPositions(run, entire, &positionBuffer);
                 
                 for glyphIndex in 0..<glyphCount {
@@ -359,9 +359,9 @@ public class TextRenderer: Primitive {
                     
                     let boundsTransX = frameBoundingRect.origin.x + lineOrigin.x
                     let boundsTransY = frameBoundingRect.origin.y + lineOrigin.y + glyphOrigin.y
-                    let pathTransform = CGAffineTransformMake(1, 0, 0, 1, boundsTransX, boundsTransY)
+                    let pathTransform = CGAffineTransform(a: 1, b: 0, c: 0, d: 1, tx: boundsTransX, ty: boundsTransY)
                     
-                    glyphRect = CGRectApplyAffineTransform(glyphRect, pathTransform)
+                    glyphRect = glyphRect.apply(transform: pathTransform)
                     
                     block(glyph: glyph, glyphIndex: glyphIndexInFrame, glyphBounds: glyphRect)
                     

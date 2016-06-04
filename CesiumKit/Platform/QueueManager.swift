@@ -31,8 +31,8 @@ class QueueManager {
         fontAtlasQueue = dispatch_queue_create("com.testtoast.CesiumKit.fontAtlasQueue", DISPATCH_QUEUE_SERIAL)
 
         networkQueue = NSOperationQueue()
-        networkQueue.qualityOfService = .Utility
-        networkQueue.suspended = false
+        networkQueue.qualityOfService = .utility
+        networkQueue.isSuspended = false
         networkQueue.maxConcurrentOperationCount = _maxConcurrentNetworkRequests
     }
     

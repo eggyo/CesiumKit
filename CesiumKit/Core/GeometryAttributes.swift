@@ -188,9 +188,9 @@ class GeometryAttributes {
 
 extension GeometryAttributes: Sequence {
     
-    typealias Generator = AnyIterator<GeometryAttribute>
+    typealias Iterator = AnyIterator<GeometryAttribute>
     
-    func generate() -> Generator {
+    func makeIterator() -> Iterator {
         var index = 0
         return AnyIterator {
             while index < self._maxAttributes {

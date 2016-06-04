@@ -104,7 +104,7 @@ class ShaderProgram {
         _fragmentShaderText = combinedShaders.fst
         keyword = combinedShaders.keyword
         //nativeMetalUniforms = _manualUniformStruct != nil
-        initialize(device, optimizer: optimizer)
+        initialize(device: device, optimizer: optimizer)
         
         if manualUniformStruct != nil {
             guard let uniformStructSize = uniformStructSize else {
@@ -122,24 +122,24 @@ class ShaderProgram {
             print("Could not find CesiumKit bundle in executable")
             return nil
         }
-        guard let libraryPath = bundle.URLForResource("default", withExtension: "metallib")?.path else {
+        guard let libraryPath = bundle.urlForResource("default", withExtension: "metallib")?.path else {
             print("Could not find shader source from bundle")
             return nil
         }
         let shaderLibrary: MTLLibrary
         do {
-            shaderLibrary = try device.newLibraryWithFile(libraryPath)
+            shaderLibrary = try device.newLibrary(withFile: libraryPath)
         } catch let error as NSError {
             print("Could not generate library from compiled shader lib: \(error.localizedDescription)")
             return nil
         }
         
-        guard let metalVertexFunction = shaderLibrary.newFunctionWithName(vertex) else {
+        guard let metalVertexFunction = shaderLibrary.newFunction(withName: vertex) else {
             print("No vertex function found for \(vertex)")
             return nil
         }
         self.metalVertexFunction = metalVertexFunction
-        guard let metalFragmentFunction = shaderLibrary.newFunctionWithName(fragment) else {
+        guard let metalFragmentFunction = shaderLibrary.newFunction(withName: fragment) else {
             print("No fragment function found for \(fragment)")
             return nil
         }
@@ -159,8 +159,8 @@ class ShaderProgram {
     
     private func initialize(device: MTLDevice, optimizer: GLSLOptimizer) {
 
-        createMetalProgram(optimizer)
-        compileMetalProgram(device)
+        createMetalProgram(optimizer: optimizer)
+        compileMetalProgram(device: device)
         
         findVertexAttributes()
         findUniforms()
@@ -176,11 +176,11 @@ class ShaderProgram {
     
     private func createMetalProgram(optimizer: GLSLOptimizer) {
         
-        _vertexShader = optimizer.optimize(.Vertex, shaderSource: _vertexShaderText, manualUniformStruct: _manualUniformStruct, options: 0)
+        _vertexShader = optimizer.optimize(.vertex, shaderSource: _vertexShaderText, manualUniformStruct: _manualUniformStruct, options: 0)
         assert(_vertexShader.status(), _vertexShader.log())
         _metalVertexShaderSource = _vertexShader.output()
         
-        _fragmentShader = optimizer.optimize(.Fragment, shaderSource: _fragmentShaderText, manualUniformStruct: _manualUniformStruct, options: 0)
+        _fragmentShader = optimizer.optimize(.fragment, shaderSource: _fragmentShaderText, manualUniformStruct: _manualUniformStruct, options: 0)
         assert(_fragmentShader.status(), _fragmentShader.log())
         _metalFragmentShaderSource = _fragmentShader.output()
     }
@@ -188,8 +188,8 @@ class ShaderProgram {
     private func compileMetalProgram(device: MTLDevice) {
         
         do {
-            _vertexLibrary = try device.newLibraryWithSource(_metalVertexShaderSource, options: nil)
-            metalVertexFunction = _vertexLibrary.newFunctionWithName("xlatMtlMain")
+            _vertexLibrary = try device.newLibrary(withSource: _metalVertexShaderSource, options: nil)
+            metalVertexFunction = _vertexLibrary.newFunction(withName: "xlatMtlMain")
         } catch let error as NSError {
             print(_fragmentShaderText)
             print(_metalFragmentShaderSource)
@@ -198,8 +198,8 @@ class ShaderProgram {
         }
         
         do {
-            _fragmentLibrary = try device.newLibraryWithSource(_metalFragmentShaderSource, options: nil)
-            metalFragmentFunction = _fragmentLibrary.newFunctionWithName("xlatMtlMain")
+            _fragmentLibrary = try device.newLibrary(withSource: _metalFragmentShaderSource, options: nil)
+            metalFragmentFunction = _fragmentLibrary.newFunction(withName: "xlatMtlMain")
         } catch let error as NSError {
             print(_fragmentShaderText)
             print(_metalFragmentShaderSource)
@@ -215,7 +215,7 @@ class ShaderProgram {
         
         for i in 0..<attributeCount {
             let attribute = _vertexShader.inputDescription(i)
-            vertexAttributes[attribute.name] = attribute
+            vertexAttributes[(attribute?.name)!] = attribute
         }
     }
     
@@ -234,8 +234,8 @@ class ShaderProgram {
         _vertexUniforms = [Uniform]()
         let vertexUniformCount = _vertexShader.uniformCount()
         for i in 0..<vertexUniformCount {
-            let desc =  _vertexShader.uniformDescription(i)
-            let type = uniformType(desc)
+            let desc =  _vertexShader.uniformDescription(i)!
+            let type = uniformType(desc: desc)
             
             if type != .Manual {
                 continue
@@ -246,9 +246,9 @@ class ShaderProgram {
         _fragmentUniforms = [Uniform]()
         let fragmentUniformCount = _fragmentShader.uniformCount()
         for i in 0..<fragmentUniformCount {
-            let desc =  _fragmentShader.uniformDescription(i)
+            let desc =  _fragmentShader.uniformDescription(i)!
             
-            let type = uniformType(desc)
+            let type = uniformType(desc: desc)
             if type != .Manual {
                 continue
             }
@@ -258,9 +258,9 @@ class ShaderProgram {
         _samplerUniforms = [UniformSampler]()
         let samplerUniformCount = _fragmentShader.textureCount()
         for i in 0..<samplerUniformCount {
-            let desc =  _fragmentShader.textureDescription(i)
+            let desc =  _fragmentShader.textureDescription(i)!
             let samplerUniform = Uniform.create(desc: desc, type: .Sampler) as! UniformSampler
-            samplerUniform.setSampler(Int(i))
+            samplerUniform.setSampler(textureUnitIndex: Int(i))
             _samplerUniforms.append(samplerUniform)
         }
     }
@@ -277,11 +277,11 @@ class ShaderProgram {
         _uniformBufferAlignment = maxAlignment
     }
     
-    private func elementStrideForUniform (uniform: Uniform) -> Int {
+    private func elementStrideFor (uniform: Uniform) -> Int {
         return uniform.alignedSize
     }
     
-    private func paddingRequredForUniform (uniform: Uniform, lastOffset: Int) -> Int {
+    private func paddingRequredFor (uniform: Uniform, lastOffset: Int) -> Int {
         
         let currentAlignment = lastOffset % _uniformBufferAlignment
         let requiredAlignment = uniform.dataType.alignment
@@ -297,20 +297,20 @@ class ShaderProgram {
         
         var offset = 0
         for uniform in _vertexUniforms {
-            let padding = paddingRequredForUniform(uniform, lastOffset: offset)
+            let padding = paddingRequredFor(uniform: uniform, lastOffset: offset)
             offset += padding
             uniform.offset = offset
-            offset += elementStrideForUniform(uniform)
+            offset += elementStrideFor(uniform: uniform)
             //print("\(uniform.name): offset \(uniform.offset)(padding \(padding) stride: \(elementStrideForUniform(uniform)))")
         }
         offset = ((offset + 255) / 256) * 256 // fragment buffer offset must be a multiple of 256
         vertexUniformSize = offset
         
         for uniform in _fragmentUniforms {
-            let padding = paddingRequredForUniform(uniform, lastOffset: offset)
+            let padding = paddingRequredFor(uniform: uniform, lastOffset: offset)
             offset += padding
             uniform.offset = offset
-            offset += elementStrideForUniform(uniform)
+            offset += elementStrideFor(uniform: uniform)
             //print("\(uniform.name): offset \(uniform.offset)(padding \(padding) stride: \(elementStrideForUniform(uniform)))")
         }
         
@@ -333,11 +333,11 @@ class ShaderProgram {
         }
         
         if let map = map as? NativeUniformMap {
-            return setNativeUniforms(map, uniformState: uniformState)
+            return setNativeUniforms(map: map, uniformState: uniformState)
         }
         
         if let map = map as? LegacyUniformMap {
-            return setLegacyUniforms(map, uniformState: uniformState)
+            return setLegacyUniforms(map: map, uniformState: uniformState)
         }
         
         return (0, false, [Texture]())
@@ -345,7 +345,7 @@ class ShaderProgram {
     
     private func setNativeUniforms (map: NativeUniformMap, uniformState: UniformState) -> (fragmentOffset: Int, texturesValid: Bool, textures: [Texture])
     {
-        guard let buffer = map.uniformBufferProvider?.currentBuffer(uniformState.frameState.context.bufferSyncState) else {
+        guard let buffer = map.uniformBufferProvider?.currentBuffer(index: uniformState.frameState.context.bufferSyncState) else {
             return (0, false, [Texture]())
         }
         
@@ -356,16 +356,16 @@ class ShaderProgram {
     
     func setLegacyUniforms (map: LegacyUniformMap, uniformState: UniformState) -> (fragmentOffset: Int, texturesValid: Bool, textures: [Texture]) {
         
-        guard let buffer = map.uniformBufferProvider?.currentBuffer(uniformState.frameState.context.bufferSyncState) else {
+        guard let buffer = map.uniformBufferProvider?.currentBuffer(index: uniformState.frameState.context.bufferSyncState) else {
             return (0, false, [Texture]())
         }
         
         for uniform in _vertexUniforms {
-            setUniform(uniform, buffer: buffer, map: map, uniformState: uniformState)
+            setUniform(uniform: uniform, buffer: buffer, map: map, uniformState: uniformState)
         }
         
         for uniform in _fragmentUniforms {
-            setUniform(uniform, buffer: buffer, map: map, uniformState: uniformState)
+            setUniform(uniform: uniform, buffer: buffer, map: map, uniformState: uniformState)
         }
         
         buffer.signalWriteComplete()
@@ -374,7 +374,7 @@ class ShaderProgram {
         
         var texturesValid = true
         for uniform in _samplerUniforms {
-            if let texture = map.textureForUniform(uniform) {
+            if let texture = map.textureFor(uniform: uniform) {
                 textures.append(texture)
             } else {
                 texturesValid = false
@@ -404,16 +404,16 @@ class ShaderProgram {
             return
         case .Manual:
             guard let index = uniform.mapIndex else {
-                guard let index = map.indexForUniform(uniform.name) else {
+                guard let index = map.indexForUniform(name: uniform.name) else {
                     assertionFailure("uniform not found for \(uniform.name)")
                     return
                 }
                 uniform.mapIndex = index
-                let uniformFunc = map.uniform(index)
+                let uniformFunc = map.uniform(index: index)
                 uniformFunc(map: map, buffer: metalBufferPointer)
                 break
             }
-            let uniformFunc = map.uniform(index)
+            let uniformFunc = map.uniform(index: index)
             uniformFunc(map: map, buffer: metalBufferPointer)
             
         case .Sampler:

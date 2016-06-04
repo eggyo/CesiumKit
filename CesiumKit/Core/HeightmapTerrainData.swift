@@ -139,7 +139,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
         let rectangle = tilingScheme.tileXYToRectangle(x: x, y: y, level: level)
         
         // Compute the center of the tile for RTC rendering.
-        let center = ellipsoid.cartographicToCartesian(cartographic: rectangle.center)
+        let center = ellipsoid.cartographicToCartesian(rectangle.center)
         
         let levelZeroMaxError = EllipsoidTerrainProvider.estimatedLevelZeroGeometricErrorForAHeightmap(
             ellipsoid: ellipsoid,
@@ -385,8 +385,8 @@ class HeightmapTerrainData: TerrainData, Equatable {
         return southwestHeight + (dX * (northeastHeight - northwestHeight)) + (dY * (northwestHeight - southwestHeight))
     }
     
-    private func getHeight(heights heights: [UInt16], elementsPerHeight: Int, elementMultiplier: Double, stride: Int, isBigEndian: Bool, index: Int) -> Double {
-        let trueIndex = index * stride
+    private func getHeight(heights heights: [UInt16], elementsPerHeight: Int, elementMultiplier: Double, stride increment: Int, isBigEndian: Bool, index: Int) -> Double {
+        let trueIndex = index * increment
         
         var height = 0.0
         
@@ -395,7 +395,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
                 height = Double(height) * elementMultiplier + Double(heights[trueIndex + i])
             }
         } else {
-            for i in (elementsPerHeight - 1).stride(through: 0, by: -1) {
+            for i in stride(from: elementsPerHeight - 1, through: 0, by: -1) {
                 height = height * elementMultiplier + Double(heights[trueIndex + i])
             }
         }
@@ -403,9 +403,9 @@ class HeightmapTerrainData: TerrainData, Equatable {
         return height
     }
     
-    private func setHeight( heights heights: inout [UInt16], elementsPerHeight: Int, elementMultiplier: Double, divisor: Double, stride: Int, isBigEndian: Bool, index: Int, height: Double) {
+    private func setHeight( heights heights: inout [UInt16], elementsPerHeight: Int, elementMultiplier: Double, divisor: Double, stride increment: Int, isBigEndian: Bool, index: Int, height: Double) {
         
-        let index = index * stride
+        let index = index * increment
         
         var height = height
         var divisor = divisor
@@ -416,7 +416,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
                 divisor /= elementMultiplier
             }
         } else {
-            for i in (elementsPerHeight - 1).stride(through: 0, by: -1) {
+            for i in stride(from: elementsPerHeight - 1, through: 0, by: -1) {
                 heights[index + i] = UInt16(floor(height / divisor))
                 height -= Double(heights[index + i]) * divisor
                 divisor /= elementMultiplier

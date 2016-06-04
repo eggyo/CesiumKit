@@ -31,18 +31,18 @@ class VertexDescriptor {
 
         let bufferIndex = attributes.first?.bufferIndex ?? 1
         // Set up layout descriptor
-        metalDescriptor.layouts[bufferIndex].stepFunction = .PerVertex
+        metalDescriptor.layouts[bufferIndex].stepFunction = .perVertex
         metalDescriptor.layouts[bufferIndex].stepRate = 1
 
         
         // Verify all attribute names are unique
-        var uniqueIndices = [Bool](count: attributes.count, repeatedValue: false)
-        for (index, va) in attributes.enumerate() {
+        var uniqueIndices = [Bool](repeating: false, count: attributes.count)
+        for (index, va) in attributes.enumerated() {
             if uniqueIndices[index] {
                 assertionFailure("Index \(index) is used by more than one attribute.")
             }
             uniqueIndices[index] = true
-            addAttribute(va)
+            addAttribute(attribute: va)
         }
     }
     

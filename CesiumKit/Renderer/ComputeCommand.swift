@@ -131,7 +131,7 @@ class ComputeCommand: Command {
     * @param {Context} context The context that processes the compute command.
     */
     func execute (computeEngine: ComputeEngine) {
-        computeEngine.execute(self)
+        computeEngine.execute(computeCommand: self)
     }
     
 }

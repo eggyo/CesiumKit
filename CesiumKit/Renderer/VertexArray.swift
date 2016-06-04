@@ -102,7 +102,7 @@ class VertexArray {
         var vertexAttributes = [VertexAttributes]()
         if (interleave) {
             // Use a single vertex buffer with interleaved vertices.
-            if let interleavedAttributes = VertexArray.interleaveAttributes(context, attributes: geometry.attributes) {
+            if let interleavedAttributes = VertexArray.interleaveAttributes(context: context, attributes: geometry.attributes) {
                 let vertexBuffer = interleavedAttributes.buffer
                 let offsetsInBytes = interleavedAttributes.offsetsInBytes
                 //var strideInBytes = interleavedAttributes.vertexSizeInBytes
@@ -120,7 +120,7 @@ class VertexArray {
                             buffer: vaCount == 0 ? vertexBuffer : nil,
                             bufferIndex: VertexDescriptorFirstBufferOffset,
                             index: vaCount,
-                            format: geometryAttribute.componentDatatype.toVertexType(geometryAttribute.componentsPerAttribute),
+                            format: geometryAttribute.componentDatatype.toVertexType(attributeCount: geometryAttribute.componentsPerAttribute),
                             offset: offsetsInBytes[vaCount],
                             size: geometryAttribute.size,
                             normalize: geometryAttribute.normalize
@@ -148,7 +148,7 @@ class VertexArray {
                     geometryAttribute.componentDatatype = ComponentDatatype.Float32
                     if let values = geometryAttribute.values {
                         
-                        var doubleArray = [Double](count: values.count, repeatedValue: 0.0)
+                        var doubleArray = [Double](repeating: 0.0, count: values.count)
                         let geometryArraySize = geometryAttribute.vertexArraySize
                         
                         doubleArray.withUnsafeMutableBufferPointer({ (pointer: inout UnsafeMutableBufferPointer<Double>) in
@@ -168,7 +168,7 @@ class VertexArray {
                     buffer: vertexBuffer,
                     bufferIndex: VertexDescriptorFirstBufferOffset + vaCount, // uniform buffer is [0]
                     index: 0,
-                    format: geometryAttribute.componentDatatype.toVertexType(geometryAttribute.componentsPerAttribute),
+                    format: geometryAttribute.componentDatatype.toVertexType(attributeCount: geometryAttribute.componentsPerAttribute),
                     offset: 0,
                     size: geometryAttribute.size,
                     normalize: geometryAttribute.normalize
@@ -216,14 +216,14 @@ class VertexArray {
             
             // Extract attribute names.
             var attributeNames = [String]()
-            for (i, geometryAttribute) in attributes.enumerate() {
+            for (i, geometryAttribute) in attributes.enumerated() {
                 
                 // Attribute needs to have per-vertex values; not a constant value for all vertices.
                 attributeNames.append(geometryAttribute.name)
                 
                 if (geometryAttribute.componentDatatype == ComponentDatatype.Float64) {
                     geometryAttribute.componentDatatype = ComponentDatatype.Float32
-                    var doubleArray = [Double](count: geometryAttribute.vertexCount, repeatedValue: 0.0)
+                    var doubleArray = [Double](repeating: 0.0, count: geometryAttribute.vertexCount)
                     let geometryArraySize = geometryAttribute.vertexArraySize
                     doubleArray.withUnsafeMutableBufferPointer({ (pointer: inout UnsafeMutableBufferPointer<Double>) in
                         memcpy(pointer.baseAddress, geometryAttribute.values!.data, geometryArraySize)
@@ -236,17 +236,17 @@ class VertexArray {
             var numberOfVertices = 0
             
             if (attributeNames.count > 0) {
-                numberOfVertices = VertexArray.computeNumberOfVertices(attributes[attributeNames.first!]!)
+                numberOfVertices = VertexArray.computeNumberOfVertices(attribute: attributes[attributeNames.first!]!)
                 
                 for name in attributeNames {
-                    let currentNumberOfVertices = computeNumberOfVertices(attributes[name]!)
+                    let currentNumberOfVertices = computeNumberOfVertices(attribute: attributes[name]!)
                     
                     assert(currentNumberOfVertices == numberOfVertices, "Each attribute list must have the same number of vertices.")
                 }
             }
             
             // Sort attributes by the size of their components.  From left to right, a vertex stores floats, shorts, and then bytes.
-            attributeNames.sortInPlace({ a, b in
+            attributeNames.sort(isOrderedBefore: { a, b in
                 return attributes[a]!.componentDatatype.elementSize > attributes[b]!.componentDatatype.elementSize
             })
             // Compute sizes and strides.
