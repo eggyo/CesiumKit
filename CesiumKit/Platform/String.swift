@@ -17,19 +17,20 @@ enum ObjectSourceReferenceType {
 extension String {
     subscript (r: Range<Int>) -> String {
         get {
-            let startIndex = self.startIndex.advancedBy(r.startIndex)
-            let endIndex = self.startIndex.advancedBy(r.endIndex - r.startIndex)
+            let startIndex = self.index(self.startIndex, offsetBy: r.lowerBound)
+            let endIndex = self.index(self.startIndex, offsetBy: r.upperBound)
             
             return self[startIndex..<endIndex]
         }
     }
     
     func replace(existingString: String, _ newString: String) -> String {
-        return self.stringByReplacingOccurrencesOfString(existingString, withString: newString, options: NSStringCompareOptions.LiteralSearch, range: nil)
+        return (self as! NSString).replacingOccurrences(of: existingString, with: newString, options: .literalSearch, range: NSRange(location: 0, length: (self as! NSString).length))
     }
     
     func indexOf(findStr:String, startIndex: String.Index? = nil) -> String.Index? {
-        return self.rangeOfString(findStr, options: [], range: nil, locale: nil)?.startIndex
+        let range = (self as! NSString).range(findStr, options: [], range: NSRange(location: 0, length: (self as! NSString).length), locale: nil)
+        return self.index(startIndex, offsetBy: range.lowerBound)
     }
     
 }
@@ -48,9 +49,9 @@ extension String {
     func urlForSource () -> NSURL? {
         switch self.referenceType {
         case .BundleResource:
-            let bundle = NSBundle(identifier: "com.testtoast.CesiumKit") ?? NSBundle.mainBundle()
+            let bundle = NSBundle(identifier: "com.testtoast.CesiumKit") ?? NSBundle.main()
             #if os(OSX)
-                return bundle.URLForImageResource(self)
+                return bundle.url(forImageResource: self)
             #elseif os(iOS)
                 return bundle.URLForResource((self as NSString).stringByDeletingPathExtension, withExtension: (self as NSString).pathExtension)
             #endif
@@ -67,8 +68,8 @@ extension String {
             return nil
         }
         do {
-            let data = try NSData(contentsOfURL: sourceURL, options: [])
-            return CGImage.fromData(data)
+            let data = try NSData(contentsOf: sourceURL, options: [])
+            return CGImage.fromData(data: data)
         } catch {
             return nil
         }

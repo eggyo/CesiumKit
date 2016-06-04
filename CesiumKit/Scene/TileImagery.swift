@@ -52,7 +52,7 @@ class TileImagery {
     * @param {FrameState} frameState The frameState.
     * @returns {Boolean} True if this instance is done loading; otherwise, false.
     */
-    func processStateMachine (tile: QuadtreeTile, inout frameState: FrameState) -> Bool {
+    func processStateMachine (tile: QuadtreeTile, frameState: inout FrameState) -> Bool {
         
         let imageryLayer = loadingImagery!.imageryLayer
         

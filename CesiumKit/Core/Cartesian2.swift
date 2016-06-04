@@ -261,7 +261,7 @@ public struct Cartesian2 {
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     public func divideByScalar(scalar: Double) -> Cartesian2 {
-        return multiplyByScalar(1.0/scalar)
+        return multiplyByScalar(scalar: 1.0/scalar)
     }
     
     /**
@@ -307,7 +307,7 @@ public struct Cartesian2 {
     * @returns {Number} The angle between the Cartesians.
     */
     func angleBetween(other: Cartesian2) -> Double {
-        return Math.acosClamped(normalize().dot(other.normalize()))
+        return Math.acosClamped(value: normalize().dot(other: other.normalize()))
     }
     
     /**
@@ -347,8 +347,8 @@ public struct Cartesian2 {
     */
     func equalsEpsilon(other: Cartesian2, relativeEpsilon: Double, absoluteEpsilon: Double? = nil) -> Bool {
         return self == other ||
-                (Math.equalsEpsilon(self.x, other.x, relativeEpsilon: relativeEpsilon, absoluteEpsilon: absoluteEpsilon) &&
-                Math.equalsEpsilon(self.y, other.y, relativeEpsilon: relativeEpsilon, absoluteEpsilon: absoluteEpsilon))
+                (Math.equalsEpsilon(x, other.x, relativeEpsilon: relativeEpsilon, absoluteEpsilon: absoluteEpsilon) &&
+                Math.equalsEpsilon(y, other.y, relativeEpsilon: relativeEpsilon, absoluteEpsilon: absoluteEpsilon))
     }
     
     /**
@@ -388,7 +388,7 @@ extension Cartesian2: Packable {
     
     init(array: [Double], startingIndex: Int = 0) {
         self.init()
-        assert(checkPackedArrayLength(array, startingIndex: startingIndex), "Invalid packed array length")
+        assert(checkPackedArrayLength(array: array, startingIndex: startingIndex), "Invalid packed array length")
         self.x = array[startingIndex]
         self.y = array[startingIndex+1]
         /*array.withUnsafeBufferPointer { (pointer: UnsafeBufferPointer<Double>) in

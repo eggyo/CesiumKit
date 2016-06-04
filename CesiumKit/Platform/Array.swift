@@ -8,7 +8,7 @@
 
 import Foundation
 
-public func deleteDuplicates<S:RangeReplaceableCollectionType where S.Generator.Element: Equatable>(seq:S)-> S {
+public func deleteDuplicates<S:RangeReplaceableCollection where S.Iterator.Element: Equatable>(seq:S)-> S {
     let s = seq.reduce(S()){
         ac, x in ac.contains(x) ? ac : ac + [x]
     }

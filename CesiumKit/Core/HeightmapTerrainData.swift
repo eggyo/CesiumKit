@@ -139,12 +139,12 @@ class HeightmapTerrainData: TerrainData, Equatable {
         let rectangle = tilingScheme.tileXYToRectangle(x: x, y: y, level: level)
         
         // Compute the center of the tile for RTC rendering.
-        let center = ellipsoid.cartographicToCartesian(rectangle.center)
+        let center = ellipsoid.cartographicToCartesian(cartographic: rectangle.center)
         
         let levelZeroMaxError = EllipsoidTerrainProvider.estimatedLevelZeroGeometricErrorForAHeightmap(
             ellipsoid: ellipsoid,
             tileImageWidth: _width,
-            numberOfTilesAtLevelZero: tilingScheme.numberOfXTilesAtLevel(0))
+            numberOfTilesAtLevelZero: tilingScheme.numberOfXTilesAt(level: 0))
         let thisLevelMaxError = levelZeroMaxError / Double(1 << level)
         
         _skirtHeight = min(thisLevelMaxError * 4.0, 1000.0)
@@ -171,7 +171,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
             ellipsoid: ellipsoid,
             structure: _structure,
             exaggeration: exaggeration)
-        let boundingSphere3D = BoundingSphere.fromVertices(result.vertices, center: center, stride: numberOfAttributes)
+        let boundingSphere3D = BoundingSphere.fromVertices(positions: result.vertices, center: center, stride: numberOfAttributes)
         
         let orientedBoundingBox: OrientedBoundingBox?
         
@@ -184,7 +184,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
         }
         
         let occluder = EllipsoidalOccluder(ellipsoid: ellipsoid)
-        let occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(center, vertices: result.vertices, stride: numberOfAttributes, center: center)
+        let occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(directionToPoint: center, vertices: result.vertices, stride: numberOfAttributes, center: center)
         _mesh = TerrainMesh(
             center: center,
             vertices: result.vertices,
@@ -220,7 +220,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
         var heightSample: Double
         
         if let mesh = _mesh {
-             heightSample = interpolateMeshHeight(mesh.vertices, encoding: mesh.encoding, heightOffset: _structure.heightOffset, heightScale: _structure.heightScale, skirtHeight: _skirtHeight, sourceRectangle: rectangle, width: _width, height: _height, longitude: longitude, latitude: latitude, exaggeration: mesh.exaggeration)
+             heightSample = interpolateMeshHeight(buffer: mesh.vertices, encoding: mesh.encoding, heightOffset: _structure.heightOffset, heightScale: _structure.heightScale, skirtHeight: _skirtHeight, sourceRectangle: rectangle, width: _width, height: _height, longitude: longitude, latitude: latitude, exaggeration: mesh.exaggeration)
         } else {
             heightSample = interpolateHeight2(sourceHeights: _buffer, elementsPerHeight: _structure.elementsPerHeight, elementMultiplier: _structure.elementMultiplier, stride: _structure.stride, isBigEndian: _structure.isBigEndian, sourceRectangle: rectangle, width: _width, height: _height, longitude: longitude, latitude: latitude)
             heightSample = heightSample * _structure.heightScale + _structure.heightOffset
@@ -251,7 +251,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
         
         let stride = _structure.stride
         
-        var heights = [UInt16](count: _width * _height * stride, repeatedValue: 0)
+        var heights = [UInt16](repeating: 0, count: _width * _height * stride)
         
         guard let mesh = _mesh else {
             return false
@@ -278,7 +278,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
             let latitude = Math.lerp(p: destinationRectangle.north, q: destinationRectangle.south, time: Double(j) / Double(_height - 1))
             for i in 0..<_width {
                 let longitude = Math.lerp(p: destinationRectangle.west, q: destinationRectangle.east, time: Double(i) / Double(_width - 1))
-                let heightSample = interpolateMeshHeight(buffer, encoding: encoding, heightOffset: heightOffset, heightScale: heightScale, skirtHeight: _skirtHeight, sourceRectangle: sourceRectangle, width: _width, height: _height, longitude: longitude, latitude: latitude, exaggeration: exaggeration)
+                let heightSample = interpolateMeshHeight(buffer: buffer, encoding: encoding, heightOffset: heightOffset, heightScale: heightScale, skirtHeight: _skirtHeight, sourceRectangle: sourceRectangle, width: _width, height: _height, longitude: longitude, latitude: latitude, exaggeration: exaggeration)
                 setHeight(heights: &heights, elementsPerHeight: elementsPerHeight, elementMultiplier: elementMultiplier, divisor: divisor, stride: stride, isBigEndian: isBigEndian, index: j * _width + i, height: heightSample)
             }
         }
@@ -366,10 +366,10 @@ class HeightmapTerrainData: TerrainData, Equatable {
         southInteger = height - 1 - southInteger
         northInteger = height - 1 - northInteger
         
-        let southwestHeight = (encoding.decodeHeight(buffer, index: southInteger * width + westInteger) / exaggeration - heightOffset) / heightScale
-        let southeastHeight = (encoding.decodeHeight(buffer, index: southInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale
-        let northwestHeight = (encoding.decodeHeight(buffer, index: northInteger * width + westInteger) / exaggeration - heightOffset) / heightScale
-        let northeastHeight = (encoding.decodeHeight(buffer, index: northInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale
+        let southwestHeight = (encoding.decodeHeight(buffer: buffer, index: southInteger * width + westInteger) / exaggeration - heightOffset) / heightScale
+        let southeastHeight = (encoding.decodeHeight(buffer: buffer, index: southInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale
+        let northwestHeight = (encoding.decodeHeight(buffer: buffer, index: northInteger * width + westInteger) / exaggeration - heightOffset) / heightScale
+        let northeastHeight = (encoding.decodeHeight(buffer: buffer, index: northInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale
         
         return triangleInterpolateHeight(dX: dx, dY: dy, southwestHeight: southwestHeight, southeastHeight: southeastHeight, northwestHeight: northwestHeight, northeastHeight: northeastHeight)
     }
@@ -403,7 +403,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
         return height
     }
     
-    private func setHeight(inout heights heights: [UInt16], elementsPerHeight: Int, elementMultiplier: Double, divisor: Double, stride: Int, isBigEndian: Bool, index: Int, height: Double) {
+    private func setHeight( heights heights: inout [UInt16], elementsPerHeight: Int, elementMultiplier: Double, divisor: Double, stride: Int, isBigEndian: Bool, index: Int, height: Double) {
         
         let index = index * stride
         
@@ -426,7 +426,7 @@ class HeightmapTerrainData: TerrainData, Equatable {
 }
 
 func ==(lhs: HeightmapTerrainData, rhs: HeightmapTerrainData) -> Bool {
-    let left = unsafeAddressOf(lhs)
-    let right = unsafeAddressOf(rhs)
+    let left = unsafeAddress(of: lhs)
+    let right = unsafeAddress(of: rhs)
     return left == right
 }

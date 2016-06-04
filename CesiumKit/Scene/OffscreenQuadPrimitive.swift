@@ -88,12 +88,12 @@ public class OffscreenQuadPrimitive: Primitive {
     }
 
     
-    override func update (inout frameState: FrameState) {
+    override func update ( frameState: inout FrameState) {
         
         _textCommands.removeAll()
         
         for text in _text {
-            text.update(&frameState)
+            text.update(frameState: &frameState)
         }
     }
     
@@ -107,14 +107,14 @@ public class OffscreenQuadPrimitive: Primitive {
      */
     func execute(context: Context) {
         
-        let renderPass = context.createRenderPass(_passState)
-        _clearCommand.execute(context, passState: _passState)
+        let renderPass = context.createRenderPass(passState: _passState)
+        _clearCommand.execute(context: context, passState: _passState)
         for command in _rectangles {
-            command.execute(context, renderPass: renderPass)
+            command.execute(in: context, renderPass: renderPass)
         }
         
         for command in _textCommands {
-            command.execute(context, renderPass: renderPass)
+            command.execute(in: context, renderPass: renderPass)
         }
         renderPass.complete()
     }

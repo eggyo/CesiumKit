@@ -135,7 +135,7 @@ struct BoundingSphere: BoundingVolume {
         let minBoxPt = Cartesian3(x: xMin.x, y: yMin.y, z: zMin.z)
         let maxBoxPt = Cartesian3(x: xMax.x, y: yMax.y, z: zMax.z)
         
-        let naiveCenter = minBoxPt.add(maxBoxPt).multiplyByScalar(0.5)
+        let naiveCenter = minBoxPt.add(maxBoxPt).multiplyByScalar(scalar: 0.5)
         
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0.0;
@@ -143,7 +143,7 @@ struct BoundingSphere: BoundingVolume {
             currentPos = points[i]
             
             // Find the furthest point from the naive center to calculate the naive radius.
-            let r = currentPos.subtract(naiveCenter).magnitude
+            let r = currentPos.subtract(other: naiveCenter).magnitude
             if (r > naiveRadius) {
                 naiveRadius = r
             }
@@ -211,8 +211,8 @@ struct BoundingSphere: BoundingVolume {
             var fromRectangle2DNortheast = rectangle.northeast
             fromRectangle2DNortheast.height = maximumHeight
             
-            let lowerLeft = projection.project(fromRectangle2DSouthwest)
-            let upperRight = projection.project(fromRectangle2DNortheast)
+            let lowerLeft = projection.project(cartographic: fromRectangle2DSouthwest)
+            let upperRight = projection.project(cartographic: fromRectangle2DNortheast)
             
             let width = upperRight.x - lowerLeft.x
             let height = upperRight.y - lowerLeft.y
@@ -234,7 +234,7 @@ struct BoundingSphere: BoundingVolume {
     */
     init (fromRectangle3D rectangle: Rectangle, ellipsoid: Ellipsoid = Ellipsoid.wgs84(), surfaceHeight: Double = 0) {
         let positions: [Cartesian3]
-        positions = rectangle.subsample(ellipsoid, surfaceHeight: surfaceHeight)
+        positions = rectangle.subsample(ellipsoid: ellipsoid, surfaceHeight: surfaceHeight)
         self.init(fromPoints: positions)
     }
 
@@ -284,14 +284,14 @@ struct BoundingSphere: BoundingVolume {
     var fromPointsMaxBoxPt = new Cartesian3();
     var fromPointsNaiveCenterScratch = new Cartesian3();*/
     
-    static func fromVertices(positions: [Float], center: Cartesian3 = Cartesian3.zero, stride: Int = 3) -> BoundingSphere {
+    static func fromVertices(positions: [Float], center: Cartesian3 = Cartesian3.zero, stride increment: Int = 3) -> BoundingSphere {
         
         var result = BoundingSphere()
         if (positions.count == 0) {
             return result
         }
         
-        assert(stride >= 3, "stride must be 3 or greater")
+        assert(increment >= 3, "stride must be 3 or greater")
         
         var currentPos = Cartesian3(x: Double(positions[0]) + center.x, y: Double(positions[1]) + center.y, z: Double(positions[2]) + center.z)
         
@@ -304,7 +304,7 @@ struct BoundingSphere: BoundingVolume {
         var zMax = currentPos
         
         let numElements = positions.count
-        for i in 0.stride(to: numElements, by: stride) {
+        for i in stride(from: 0, to: numElements, by: increment) {
             let x = Double(positions[i]) + center.x
             let y = Double(positions[i + 1]) + center.y
             let z = Double(positions[i + 2]) + center.z
@@ -381,11 +381,11 @@ struct BoundingSphere: BoundingVolume {
         maxBoxPt.y = yMax.y
         maxBoxPt.z = zMax.z
         
-        let naiveCenter = minBoxPt.add(maxBoxPt).multiplyByScalar(0.5)
+        let naiveCenter = minBoxPt.add(maxBoxPt).multiply(scalar: 0.5)
         
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0.0
-        for i in 0.stride(to: numElements, by: stride) {
+        for i in stride(from: 0, to: numElements, by: stride) {
             currentPos.x = Double(positions[i]) + center.x
             currentPos.y = Double(positions[i + 1]) + center.y
             currentPos.z = Double(positions[i + 2]) + center.z
@@ -639,7 +639,7 @@ BoundingSphere.unpack = function(array, startingIndex, result) {
         let halfDistanceBetweenTangentPoints = (leftRadius + centerSeparation + rightRadius) * 0.5
         
         // Compute the center point halfway between the two tangent points.
-        let center = toRightCenter.multiplyByScalar((-leftRadius + halfDistanceBetweenTangentPoints) / centerSeparation)
+        let center = toRightCenter.multiply(scalar: (-leftRadius + halfDistanceBetweenTangentPoints) / centerSeparation)
         return BoundingSphere(center: center.add(leftCenter), radius: halfDistanceBetweenTangentPoints)
     }
 /*
@@ -796,7 +796,7 @@ BoundingSphere.transformWithoutScale = function(sphere, transform, result) {
     func computePlaneDistances(position: Cartesian3, direction: Cartesian3) -> Interval {
         
         let toCenter = center.subtract(position)
-        let proj = direction.multiplyByScalar(direction.dot(toCenter))
+        let proj = direction.multiply(scalar: direction.dot(toCenter))
         let mag = proj.magnitude
         
         return Interval(start: mag - radius, stop: mag + radius)
@@ -952,7 +952,7 @@ BoundingSphere.prototype.intersect = function(plane) {
     * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
     */
     func isOccluded (occluder: Occluder) -> Bool {
-        return !occluder.isBoundingSphereVisible(self)
+        return !occluder.isBoundingSphereVisible(occludee: self)
     }
     /*
     /**

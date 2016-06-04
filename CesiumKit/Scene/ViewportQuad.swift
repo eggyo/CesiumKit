@@ -75,7 +75,7 @@ public class ViewportQuad: Primitive {
     * @exception {DeveloperError} this.material must be defined.
     * @exception {DeveloperError} this.rectangle must be defined.
     */
-    override func update (inout frameState: FrameState) {
+    override func update (frameState: inout FrameState) {
         if !show {
             return
         }

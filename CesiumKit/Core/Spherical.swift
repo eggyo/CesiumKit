@@ -26,7 +26,7 @@ struct Spherical/*: Packable*/ {
     
     static let packedLength: Int = 3;
     
-    func pack(inout array: [Float], startingIndex: Int) {
+    func pack(array: inout [Float], startingIndex: Int) {
     }
     
     static func unpack(array: [Float], startingIndex: Int) -> Spherical {

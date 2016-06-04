@@ -522,10 +522,10 @@ class OIT {
     
     func executeCommands (scene: Scene, executeFunction: ((DrawCommand, RenderPass, RenderPipeline?, Buffer?) -> ()), passState: PassState, commands: [DrawCommand]) {
         if _translucentMRTSupport {
-            executeTranslucentCommandsSortedMRT(scene, executeFunction: executeFunction, passState: passState, commands: commands)
+            executeTranslucentCommandsSortedMRT(scene: scene, executeFunction: executeFunction, passState: passState, commands: commands)
             return
         }
-        executeTranslucentCommandsSortedMultipass(scene, executeFunction: executeFunction, passState: passState, commands: commands)
+        executeTranslucentCommandsSortedMultipass(scene: scene, executeFunction: executeFunction, passState: passState, commands: commands)
     }
     
     func execute (context: Context, passState: PassState) {

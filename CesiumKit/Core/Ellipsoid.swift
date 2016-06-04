@@ -48,8 +48,8 @@ public struct Ellipsoid: Equatable {
         assert(x >= 0.0 && y >= 0.0 && z >= 0.0, "All radii components must be greater than or equal to zero.")
         
         radii = Cartesian3(x: x, y: y, z: z);
-        radiiSquared = radii.multiplyComponents(radii)
-        radiiToTheFourth = radiiSquared.multiplyComponents(radiiSquared)
+        radiiSquared = radii.multiply(radii)
+        radiiToTheFourth = radiiSquared.multiply(radiiSquared)
         oneOverRadii = Cartesian3(
             x: x == 0 ? 0.0 : 1.0 / x,
             y: y == 0 ? 0.0 : 1.0 / y,
@@ -137,8 +137,8 @@ public struct Ellipsoid: Equatable {
     * @param {Cartesian3} [result] The object onto which to store the result.
     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
     */
-    func geodeticSurfaceNormal(cartesian: Cartesian3) -> Cartesian3 {
-        return cartesian.multiplyComponents(oneOverRadiiSquared).normalize()
+    func geodeticSurfaceNormal(_ cartesian: Cartesian3) -> Cartesian3 {
+        return cartesian.multiply(oneOverRadiiSquared).normalize()
     }
     
     /**
@@ -154,12 +154,12 @@ public struct Ellipsoid: Equatable {
     * var cartesianPosition = Cesium.Ellipsoid.WGS84.cartographicToCartesian(position);
     */
     public func cartographicToCartesian(cartographic: Cartographic) -> Cartesian3 {
-        var n = geodeticSurfaceNormalCartographic(cartographic)
-        var k = radiiSquared.multiplyComponents(n)
+        var n = geodeticSurfaceNormalCartographic(cartographic: cartographic)
+        var k = radiiSquared.multiply(n)
         
         let gamma = sqrt(n.dot(k))
-        k = k.divideByScalar(gamma)
-        n = n.multiplyByScalar(cartographic.height)
+        k = k.divide(scalar: gamma)
+        n = n.multiply(scalar: cartographic.height)
         
         return k.add(n)
     }
@@ -179,7 +179,7 @@ public struct Ellipsoid: Equatable {
     * var cartesianPositions = Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
     */
     func cartographicArrayToCartesianArray(cartographics: [Cartographic]) -> [Cartesian3] {
-        return cartographics.map({ cartographicToCartesian($0) })
+        return cartographics.map({ cartographicToCartesian(cartographic: $0) })
     }
     
     /**
@@ -198,7 +198,7 @@ public struct Ellipsoid: Equatable {
     
     public func cartesianToCartographic(cartesian: Cartesian3) -> Cartographic? {
         
-        let p = scaleToGeodeticSurface(cartesian)
+        let p = scaleToGeodeticSurface(cartesian: cartesian)
         if p == nil {
             return nil
         }
@@ -230,7 +230,7 @@ public struct Ellipsoid: Equatable {
     * var cartographicPositions = Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
     */
     func cartesianArrayToCartographicArray(cartesians: [Cartesian3]) -> [Cartographic] {
-        return cartesians.flatMap({ cartesianToCartographic($0) })
+        return cartesians.flatMap({ cartesianToCartographic(cartesian: $0) })
     }
     
     /**
@@ -261,7 +261,7 @@ public struct Ellipsoid: Equatable {
         let ratio = sqrt(1.0 / squaredNorm)
         
         // As an initial approximation, assume that the radial intersection is the projection point.
-        let intersection = cartesian.multiplyByScalar(ratio)
+        let intersection = cartesian.multiply(scalar: ratio)
         
         //* If the position is near the center, the iteration will not converge.
         if (squaredNorm < centerToleranceSquared) {
@@ -343,7 +343,7 @@ public struct Ellipsoid: Equatable {
             positionZ * positionZ * oneOverRadiiSquared.z
         let beta = 1.0 / sqrt(betaSquared)
         
-        return cartesian.multiplyByScalar(beta)
+        return cartesian.multiply(scalar: beta)
     }
     
     /**
@@ -357,7 +357,7 @@ public struct Ellipsoid: Equatable {
     *          one passed as the result parameter if it is not undefined, or a new instance of it is.
     */
     func transformPositionToScaledSpace(position: Cartesian3) -> Cartesian3 {
-        return position.multiplyComponents(oneOverRadii)
+        return position.multiply(oneOverRadii)
     }
     
     /**
@@ -371,7 +371,7 @@ public struct Ellipsoid: Equatable {
     *          one passed as the result parameter if it is not undefined, or a new instance of it is.
     */
     func transformPositionFromScaledSpace(position: Cartesian3) -> Cartesian3 {
-        return position.multiplyComponents(radii)
+        return position.multiply(radii)
     }
     
     
@@ -412,8 +412,8 @@ extension Ellipsoid: Packable {
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     
-    func pack (inout array: [Float], startingIndex: Int = 0) {
-        radii.pack(&array, startingIndex: startingIndex)
+    func pack ( array: inout [Float], startingIndex: Int = 0) {
+        radii.pack(array: &array, startingIndex: startingIndex)
     }
 
 }

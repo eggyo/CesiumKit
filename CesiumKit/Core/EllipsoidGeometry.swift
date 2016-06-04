@@ -75,7 +75,7 @@ struct EllipsoidGeometry {
     * @param {Number[]} array The array to pack into.
     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
     */
-    func pack (inout array: [Float], startingIndex: Int = 0) {
+    func pack (array: inout [Float], startingIndex: Int = 0) {
     /*
     startingIndex = defaultValue(startingIndex, 0);
     

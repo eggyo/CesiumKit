@@ -186,13 +186,13 @@ class GeometryAttributes {
 
 }
 
-extension GeometryAttributes: SequenceType {
+extension GeometryAttributes: Sequence {
     
-    typealias Generator = AnyGenerator<GeometryAttribute>
+    typealias Generator = AnyIterator<GeometryAttribute>
     
     func generate() -> Generator {
         var index = 0
-        return AnyGenerator {
+        return AnyIterator {
             while index < self._maxAttributes {
                 let attribute = self[index]
                 index += 1

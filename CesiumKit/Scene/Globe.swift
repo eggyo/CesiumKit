@@ -303,7 +303,7 @@ class Globe {
 /**
 * @private
 */
-    func beginFrame(inout frameState: FrameState) {
+    func beginFrame(frameState: inout FrameState) {
         if !show {
             return
         }
@@ -406,7 +406,7 @@ class Globe {
     /**
      * @private
      */
-    func update (inout frameState: FrameState) {
+    func update (frameState: inout FrameState) {
         if !show {
             return
         }
@@ -420,7 +420,7 @@ class Globe {
         }
     }
     
-    func endFrame (inout frameState: FrameState) {
+    func endFrame (frameState: inout FrameState) {
         if !show {
             return
         }

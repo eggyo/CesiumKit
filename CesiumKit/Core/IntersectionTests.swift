@@ -116,7 +116,7 @@ class IntersectionTests {
     * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
     */
     static func rayTriangle (ray: Ray, p0: Cartesian3, p1: Cartesian3, p2: Cartesian3, cullBackFaces: Bool = false) -> Cartesian3? {
-        let t = _rayTriangle(ray, p0: p0, p1: p1, p2: p2, cullBackFaces: cullBackFaces)
+        let t = _rayTriangle(ray: ray, p0: p0, p1: p1, p2: p2, cullBackFaces: cullBackFaces)
         if t == nil || t < 0.0 {
             return nil
         }
@@ -220,7 +220,7 @@ return Cartesian3.add(ray.origin, result, result);
     */
     static func raySphere (ray: Ray, sphere: BoundingSphere) -> Interval? {
         
-        var result = _raySphere(ray, sphere: sphere)
+        var result = _raySphere(ray: ray, sphere: sphere)
         
         if result == nil || result!.stop < 0.0 {
             return nil
@@ -284,8 +284,8 @@ var scratchW = new Cartesian3();
     static func rayEllipsoid (ray: Ray, ellipsoid: Ellipsoid) -> Interval? {
         
         let inverseRadii = ellipsoid.oneOverRadii
-        let q = inverseRadii.multiplyComponents(ray.origin)
-        let w = inverseRadii.multiplyComponents(ray.direction)
+        let q = inverseRadii.multiply(ray.origin)
+        let w = inverseRadii.multiply(ray.direction)
         
         let q2 = q.magnitudeSquared
         let qw = q.dot(w)

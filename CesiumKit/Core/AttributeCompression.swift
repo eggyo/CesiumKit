@@ -48,8 +48,8 @@ class AttributeCompression {
         if (vector.z < 0) {
             let x = result.x
             let y = result.y
-            result.x = (1.0 - abs(y)) * Double(Math.signNotZero(x))
-            result.y = (1.0 - abs(x)) * Double(Math.signNotZero(y))
+            result.x = (1.0 - abs(y)) * Double(Math.signNotZero(value: x))
+            result.y = (1.0 - abs(x)) * Double(Math.signNotZero(value: y))
         }
         
         result.x = Double(Math.toSNorm(result.x))
@@ -83,8 +83,8 @@ class AttributeCompression {
         if (result.z < 0.0)
         {
             let oldVX = result.x
-            result.x = (1.0 - abs(result.y)) * Double(Math.signNotZero(oldVX))
-            result.y = (1.0 - abs(oldVX)) * Double(Math.signNotZero(result.y))
+            result.x = (1.0 - abs(result.y)) * Double(Math.signNotZero(value: oldVX))
+            result.y = (1.0 - abs(oldVX)) * Double(Math.signNotZero(value: result.y))
         }
         
         return result.normalize()

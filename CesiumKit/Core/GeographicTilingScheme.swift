@@ -71,7 +71,7 @@ class GeographicTilingScheme: TilingScheme {
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the X direction at the given level.
      */
-    func numberOfXTilesAtLevel(level: Int) -> Int {
+    func numberOfXTilesAt(level: Int) -> Int {
         return numberOfLevelZeroTilesX << level
     }
 
@@ -81,7 +81,7 @@ class GeographicTilingScheme: TilingScheme {
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the Y direction at the given level.
      */
-    func numberOfYTilesAtLevel(level: Int) -> Int {
+    func numberOfYTilesAt(level: Int) -> Int {
         return numberOfLevelZeroTilesY << level
     }
 
@@ -96,10 +96,10 @@ class GeographicTilingScheme: TilingScheme {
      *          is undefined.
      */
     func rectangleToNativeRectangle(rectangle: Rectangle) -> Rectangle {
-        let west = Math.toDegrees(rectangle.west)
-        let south = Math.toDegrees(rectangle.south)
-        let east = Math.toDegrees(rectangle.east)
-        let north = Math.toDegrees(rectangle.north)
+        let west = Math.toDegrees(radians: rectangle.west)
+        let south = Math.toDegrees(radians: rectangle.south)
+        let east = Math.toDegrees(radians: rectangle.east)
+        let north = Math.toDegrees(radians: rectangle.north)
         
         return Rectangle(west: west, south: south, east: east, north: north)
     }
@@ -119,10 +119,10 @@ class GeographicTilingScheme: TilingScheme {
      */
     func tileXYToNativeRectangle(x x: Int, y: Int, level: Int) -> Rectangle {
         var rectangleRadians = tileXYToRectangle(x: x, y: y, level: level)
-        rectangleRadians.west = Math.toDegrees(rectangleRadians.west)
-        rectangleRadians.south = Math.toDegrees(rectangleRadians.south)
-        rectangleRadians.east = Math.toDegrees(rectangleRadians.east)
-        rectangleRadians.north = Math.toDegrees(rectangleRadians.north)
+        rectangleRadians.west = Math.toDegrees(radians: rectangleRadians.west)
+        rectangleRadians.south = Math.toDegrees(radians: rectangleRadians.south)
+        rectangleRadians.east = Math.toDegrees(radians: rectangleRadians.east)
+        rectangleRadians.north = Math.toDegrees(radians: rectangleRadians.north)
         return rectangleRadians
     }
 
@@ -139,8 +139,8 @@ class GeographicTilingScheme: TilingScheme {
      */
     func tileXYToRectangle(x x: Int, y: Int, level: Int) -> Rectangle {
 
-        let xTiles = numberOfXTilesAtLevel(level)
-        let yTiles = numberOfYTilesAtLevel(level)
+        let xTiles = numberOfXTilesAt(level: level)
+        let yTiles = numberOfYTilesAt(level: level)
 
         let xTileWidth = rectangle.width / Double(xTiles)
         let west = Double(x) * xTileWidth + rectangle.west
@@ -164,12 +164,12 @@ class GeographicTilingScheme: TilingScheme {
      *          if 'result' is undefined.
      */
     func positionToTileXY(position position: Cartographic, level: Int) -> (x: Int, y: Int)? {
-        if !rectangle.contains(position) {
+        if !rectangle.contains(cartographic: position) {
             // outside the bounds of the tiling scheme
             return nil
         }
-        let xTiles = numberOfXTilesAtLevel(level)
-        let yTiles = numberOfYTilesAtLevel(level)
+        let xTiles = numberOfXTilesAt(level: level)
+        let yTiles = numberOfYTilesAt(level: level)
 
         let xTileWidth = rectangle.width / Double(xTiles)
         let yTileHeight = rectangle.height / Double(yTiles)

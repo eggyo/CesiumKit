@@ -167,7 +167,7 @@ public class ImageryLayer {
     
     private var _imageryCache = [String: Imagery]()
     
-    lazy private var _skeletonPlaceholder: TileImagery = TileImagery(imagery: Imagery.createPlaceholder(self))
+    lazy private var _skeletonPlaceholder: TileImagery = TileImagery(imagery: Imagery.createPlaceholder(imageryLayer: self))
     
     // The index of this layer in the ImageryLayerCollection.
     var layerIndex = -1
@@ -561,7 +561,7 @@ public class ImageryLayer {
      * @param {FrameState} frameState The frameState.
      * @param {Imagery} imagery The imagery instance to reproject.
      */
-    func reprojectTexture (inout frameState frameState: FrameState, imagery: Imagery) {
+    func reprojectTexture (frameState frameState: inout FrameState, imagery: Imagery) {
         
         let texture = imagery.texture!
         let rectangle = imagery.rectangle!
@@ -645,7 +645,7 @@ public class ImageryLayer {
         })
     }
     
-    func generateMipmaps (inout frameState frameState: FrameState, imagery: Imagery) {
+    func generateMipmaps (frameState frameState: inout FrameState, imagery: Imagery) {
         
         let context = frameState.context
         // Use mipmaps if this texture has power-of-two dimensions.
@@ -680,7 +680,7 @@ public class ImageryLayer {
      *
      * @param {FrameState} frameState The frameState.
      */
-    func queueReprojectionCommands (inout frameState: FrameState) {
+    func queueReprojectionCommands (frameState: inout FrameState) {
         frameState.commandList.appendContentsOf(_reprojectComputeCommands)
         _reprojectComputeCommands.removeAll()
     }

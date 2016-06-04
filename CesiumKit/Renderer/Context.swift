@@ -32,7 +32,8 @@ class Context {
     
     private (set) var bufferSyncState: BufferSyncState = .zero
     
-    private var _lastFrameDrawCommands = Array<[DrawCommand]>(count: 3, repeatedValue: [DrawCommand]())
+    private var _lastFrameDrawCommands = Array<[DrawCommand]>(repeating: [DrawCommand](), count: 3
+    )
     
     let view: MTKView
     

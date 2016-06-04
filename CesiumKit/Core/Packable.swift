@@ -34,7 +34,7 @@ protocol Packable {
     * @param {Object} value The value to pack.
     * @param {Number[]} array The array to pack into.
     */
-    func pack (inout array: [Float], startingIndex: Int)
+    func pack (array: inout [Float], startingIndex: Int)
     
     func toArray () -> [Double]
    
@@ -60,7 +60,7 @@ extension Packable {
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
-    func pack(inout array: [Float], startingIndex: Int = 0) {
+    func pack(array: inout [Float], startingIndex: Int = 0) {
         
         let doubleArray = self.toArray()
         
@@ -98,7 +98,7 @@ extension Packable {
      */
     func toArray() -> [Double] {
         let packedLength = Self.packedLength()
-        var grid = [Double](count: packedLength, repeatedValue: 0.0)
+        var grid = [Double](repeating: 0.0, count: packedLength)
         memcpy(&grid, [self], packedLength * strideof(Double))
         /*grid.withUnsafeMutableBufferPointer { (inout pointer: UnsafeMutableBufferPointer<Double>) in
             memcpy(pointer.baseAddress, [self], packedLength * strideof(Double))

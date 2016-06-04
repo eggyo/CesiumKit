@@ -110,8 +110,8 @@ public struct BoundingRectangle: Equatable {
         
         self.projection = projection
         
-        let lowerLeft = projection.project(rectangle.southwest)
-        let upperRight = projection.project(rectangle.northeast)
+        let lowerLeft = projection.project(cartographic: rectangle.southwest)
+        let upperRight = projection.project(cartographic: rectangle.northeast)
         
         upperRight.subtract(lowerLeft)
         

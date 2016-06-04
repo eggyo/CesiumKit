@@ -77,7 +77,7 @@ class EllipsoidTerrainProvider: TerrainProvider {
 
         // Note: the 64 below does NOT need to match the actual vertex dimensions, because
         // the ellipsoid is significantly smoother than actual terrain.
-        _levelZeroMaximumGeometricError = EllipsoidTerrainProvider.estimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid: ellipsoid, tileImageWidth: 64,numberOfTilesAtLevelZero: tilingScheme.numberOfXTilesAtLevel(0))
+        _levelZeroMaximumGeometricError = EllipsoidTerrainProvider.estimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid: ellipsoid, tileImageWidth: 64,numberOfTilesAtLevelZero: tilingScheme.numberOfXTilesAt(level: 0))
     }
 
     /**
@@ -97,7 +97,7 @@ class EllipsoidTerrainProvider: TerrainProvider {
      */
     func requestTileGeometry(x x: Int, y: Int, level: Int, throttleRequests: Bool, completionBlock: (TerrainData?) -> ()) {
         let terrainData = HeightmapTerrainData(
-            buffer: [UInt16](count: 16 * 16, repeatedValue: 0),
+            buffer: [UInt16](repeating: 0, count: 16 * 16),
             width : 16,
             height : 16)
         completionBlock(terrainData)

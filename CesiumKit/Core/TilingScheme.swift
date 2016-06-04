@@ -53,7 +53,7 @@ public protocol TilingScheme {
     * @param {Number} level The level-of-detail.
     * @returns {Number} The number of tiles in the X direction at the given level.
     */
-    func numberOfXTilesAtLevel(level: Int) -> Int
+    func numberOfXTilesAt(level: Int) -> Int
     
     /**
     * Gets the total number of tiles in the Y direction at a specified level-of-detail.
@@ -62,7 +62,7 @@ public protocol TilingScheme {
     * @param {Number} level The level-of-detail.
     * @returns {Number} The number of tiles in the Y direction at the given level.
     */
-    func numberOfYTilesAtLevel(level: Int) -> Int
+    func numberOfYTilesAt(level: Int) -> Int
     
     /**
     * Transforms an rectangle specified in geodetic radians to the native coordinate system

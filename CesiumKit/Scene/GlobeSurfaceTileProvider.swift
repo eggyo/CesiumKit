@@ -166,7 +166,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     }
     
     func computeDefaultLevelZeroMaximumGeometricError() -> Double {
-        return tilingScheme.ellipsoid.maximumRadius * Math.TwoPi * 0.25 / (65.0 * Double(tilingScheme.numberOfXTilesAtLevel(0)))
+        return tilingScheme.ellipsoid.maximumRadius * Math.TwoPi * 0.25 / (65.0 * Double(tilingScheme.numberOfXTilesAtLevel(level: 0)))
     }
     
     private func sortTileImageryByLayerIndex (a: TileImagery, b: TileImagery) -> Bool {
@@ -182,16 +182,16 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     *
     * @param {FrameState} frameState The frame state.
     */
-    func initialize (inout frameState: FrameState) {
+    func initialize (frameState: inout FrameState) {
         
         imageryLayers.update()
         // update each layer for texture reprojection.
-        imageryLayers.queueReprojectionCommands(&frameState)
+        imageryLayers.queueReprojectionCommands(frameState: &frameState)
         
         if _layerOrderChanged {
             _layerOrderChanged = false
-            quadtree?.forEachLoadedTile({ (tile) -> () in
-                tile.data?.imagery.sortInPlace(self.sortTileImageryByLayerIndex)
+            quadtree?.forEachLoadedTile(tileFunction: { (tile) -> () in
+                tile.data?.imagery.sort(isOrderedBefore: self.sortTileImageryByLayerIndex)
             })
         }
         
@@ -228,7 +228,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     *
     * @param {FrameState} frameState The frame state.
     */
-    func endUpdate (inout frameState: FrameState) {
+    func endUpdate (frameState: inout FrameState) {
 
         let context = frameState.context
         
@@ -246,13 +246,13 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
                 device: context.device,
                 cullFace: .Back,
                 depthTest: RenderState.DepthTest(enabled: true, function: .LessOrEqual),
-                blending: BlendingState.AlphaBlend(Cartesian4())
+                blending: BlendingState.AlphaBlend(color: Cartesian4())
             )
         }
         // And the tile render commands to the command list, sorted by texture count.
         for tilesToRender in _tilesToRenderByTextureCount.values {
             for tile in tilesToRender {
-                addDrawCommandsForTile(tile, frameState: &frameState)
+                addDrawCommandsForTile(tile: tile, frameState: &frameState)
             }
         }
     }
@@ -265,7 +265,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
          * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
          *        commands into this array.
          */
-    func updateForPick (context context: Context, frameState: FrameState, inout commandList: [Command]) {
+    func updateForPick (context context: Context, frameState: FrameState, commandList: inout [Command]) {
         if _pickRenderState == nil {
             _pickRenderState = RenderState(
                 device: context.device,
@@ -279,7 +279,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
         
         // Add the tile pick commands from the tiles drawn last frame.
         for i in 0..<_usedDrawCommands {
-            addPickCommandsForTile(_drawCommands[i], context: context, frameState: frameState, commandList: &commandList)
+            addPickCommandsForTile(drawCommand: _drawCommands[i], context: context, frameState: frameState, commandList: &commandList)
         }
     }
     
@@ -298,7 +298,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     * @returns {Number} The maximum geometric error in meters.
     */
     func levelMaximumGeometricError(level: Int) -> Double {
-        return terrainProvider.levelMaximumGeometricError(level)
+        return terrainProvider.levelMaximumGeometricError(level: level)
     }
     
     /**
@@ -312,8 +312,8 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     *
     * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
     */
-    func loadTile (tile: QuadtreeTile, inout frameState: FrameState) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState: &frameState, terrainProvider: terrainProvider, imageryLayerCollection: imageryLayers)
+    func loadTile (tile: QuadtreeTile, frameState: inout FrameState) {
+        GlobeSurfaceTile.processStateMachine(tile: tile, frameState: &frameState, terrainProvider: terrainProvider, imageryLayerCollection: imageryLayers)
     }
     
     /**
@@ -329,11 +329,11 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     */
     func computeTileVisibility (tile: QuadtreeTile, frameState: FrameState, occluders: QuadtreeOccluders) -> Visibility {
         
-        let distance = computeDistanceToTile(tile, frameState: frameState)
+        let distance = computeDistanceToTile(tile: tile, frameState: frameState)
         tile.distance = distance
         
         if frameState.fog.enabled {
-            if Math.fog(distance, density: frameState.fog.density) >= 1.0 {
+            if Math.fog(distanceToCamera: distance, density: frameState.fog.density) >= 1.0 {
                 // Tile is completely in fog so return that it is not visible.
                 return .None
             }
@@ -356,11 +356,11 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
             boundingVolume = boundingSphere
             
             if frameState.mode == .Morphing {
-                boundingVolume = surfaceTile.boundingSphere3D.union(boundingVolume as! BoundingSphere)
+                boundingVolume = surfaceTile.boundingSphere3D.union(other: boundingVolume as! BoundingSphere)
             }
         }
         
-        let intersection = cullingVolume.visibility(boundingVolume)
+        let intersection = cullingVolume.visibility(boundingVolume: boundingVolume)
         if intersection == .Outside {
             return .None
         }
@@ -371,7 +371,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
                 return Visibility(rawValue: intersection.rawValue)!
             }
             
-            if occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace!) {
+            if occluders.ellipsoid.isScaledSpacePointVisible(occludeeScaledSpacePosition: occludeePointInScaledSpace!) {
                 return Visibility(rawValue: intersection.rawValue)!
             }
             return Visibility.None
@@ -389,7 +389,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     * @param {FrameState} frameState The state information of the current rendering frame.
     * @param {DrawCommand[]} commandList The list of rendering commands.  This method may add additional commands to this list.
     */
-    func showTileThisFrame (tile: QuadtreeTile, inout frameState: FrameState) {
+    func showTileThisFrame (tile: QuadtreeTile, frameState: inout FrameState) {
         
         var readyTextureCount = 0
         
@@ -422,7 +422,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     */
     func computeDistanceToTile (tile: QuadtreeTile, frameState: FrameState) -> Double {
         let surfaceTile = tile.data!
-        return surfaceTile.tileBoundingBox!.distanceToCamera(frameState)
+        return surfaceTile.tileBoundingBox!.distanceToCamera(frameState: frameState)
     }
     
     /*
@@ -498,7 +498,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
                 let newProviders = (0..<10).map { _ in return UniformBufferProvider(device: context.device, bufferSize: size, deallocationBlock: deallocationBlock)
                 }
                 dispatch_async(dispatch_get_main_queue(), {
-                    self._manualUniformBufferProviderPool.appendContentsOf(newProviders)
+                    self._manualUniformBufferProviderPool.append(contentsOf: newProviders)
                 })
             })
         }
@@ -513,10 +513,10 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     }
     
     
-    private var _dayTextureTranslationAndScale = [float4](count: 31, repeatedValue: float4())
-    private var _dayTextureTexCoordsRectangle = [float4](count: 31, repeatedValue: float4())
+    private var _dayTextureTranslationAndScale = [float4](repeating: float4(), count: 31)
+    private var _dayTextureTexCoordsRectangle = [float4](repeating: float4(), count: 31)
     
-    func addDrawCommandsForTile(tile: QuadtreeTile, inout frameState: FrameState) {
+    func addDrawCommandsForTile(tile: QuadtreeTile, frameState: inout FrameState) {
         
         
         if tile.invalidateCommandCache {
@@ -526,7 +526,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
         
         if !tile._cachedCommands.isEmpty {
             updateRTCPosition(forTile: tile, frameState: frameState)
-            frameState.commandList.appendContentsOf(tile._cachedCommands.map { $0 as Command })
+            frameState.commandList.append(contentsOf: tile._cachedCommands.map { $0 as Command })
             return
         }
         
@@ -540,7 +540,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
         let hasVertexNormals = terrainProvider.ready && terrainProvider.hasVertexNormals
         let enableFog = frameState.fog.enabled
         
-        var scratchArray = [Float32](count: 1, repeatedValue: 0.0)
+        var scratchArray = [Float32](repeating: 0.0, count: 1)
         
         // Not used in 3D.
         var tileRectangle = Cartesian4()
@@ -556,8 +556,8 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
 
         if frameState.mode != .Scene3D {
             let projection = frameState.mapProjection
-            let southwest = projection.project(tile.rectangle.southwest)
-            let northeast = projection.project(tile.rectangle.northeast)
+            let southwest = projection.project(cartographic: tile.rectangle.southwest)
+            let northeast = projection.project(cartographic: tile.rectangle.northeast)
             
             tileRectangle.x = southwest.x
             tileRectangle.y = southwest.y
@@ -593,8 +593,8 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
                 southLatitude = tile.rectangle.south
                 northLatitude = tile.rectangle.north
                 
-                let southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude)
-                let northMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude)
+                let southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude: southLatitude)
+                let northMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude: northLatitude)
                 
                 scratchArray[0] = Float32(southMercatorY)
                 southMercatorYHigh = Double(scratchArray[0])
@@ -639,7 +639,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
             command.boundingVolume = BoundingSphere()
             command.orientedBoundingBox = nil
             
-            let uniformMap = createTileUniformMap(maxTextures)
+            let uniformMap = createTileUniformMap(maxTextureCount: maxTextures)
             
             _usedDrawCommands += 1
             
@@ -668,7 +668,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
             uniformMap.southMercatorYAndOneOverHeight = float2(x: Float(southMercatorYHigh), y: Float(oneOverMercatorHeight))
             
             // For performance, use fog in the shader only when the tile is in fog.
-            let applyFog = enableFog && Math.fog(tile.distance, density: frameState.fog.density) > Math.Epsilon3
+            let applyFog = enableFog && Math.fog(distanceToCamera: tile.distance, density: frameState.fog.density) > Math.Epsilon3
 
             var applyBrightness = false
             var applyContrast = false
@@ -692,7 +692,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
                 let imageryLayer = imagery!.imageryLayer
                 
                 if tileImagery.textureTranslationAndScale == nil {
-                    tileImagery.textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile, tileImagery: tileImagery)
+                    tileImagery.textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile: tile, tileImagery: tileImagery)
                 }
                 uniformMap.dayTextures.append(imagery!.texture!)
                 
@@ -766,11 +766,11 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
             )
             
             command.renderState = renderState
-            command.primitiveType = .Triangle
+            command.primitiveType = .triangle
             command.vertexArray = surfaceTile.vertexArray
             command.uniformMap = uniformMap
             
-            command.uniformMap!.uniformBufferProvider = getManualUniformBufferProvider(context, size: strideof(TileUniformStruct), deallocationBlock: { provider in
+            command.uniformMap!.uniformBufferProvider = getManualUniformBufferProvider(context: context, size: strideof(TileUniformStruct), deallocationBlock: { provider in
                     self.returnManualUniformBufferProvider(provider)
                 }
             )
@@ -794,7 +794,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
                     z: boundingSphere.center.y)
                 
                 if (frameState.mode == .Morphing) {
-                    boundingSphere = surfaceTile.boundingSphere3D.union(boundingSphere)
+                    boundingSphere = surfaceTile.boundingSphere3D.union(other: boundingSphere)
                 }
             } else {
                 boundingSphere = surfaceTile.boundingSphere3D
@@ -818,7 +818,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
     func updateRTCPosition(forTile tile: QuadtreeTile, frameState: FrameState) {
         let viewMatrix = frameState.camera!.viewMatrix
         let rtc = tile.data!.center
-        let centerEye = viewMatrix.multiplyByPoint(rtc)
+        let centerEye = viewMatrix.multiplyByPoint(cartesian: rtc)
         let modifiedModelView = viewMatrix.setTranslation(centerEye)
         
         for command in tile._cachedCommands {
@@ -826,7 +826,7 @@ class GlobeSurfaceTileProvider/*: QuadtreeTileProvider*/ {
         }
     }
 
-    func addPickCommandsForTile(drawCommand: DrawCommand, context: Context, frameState: FrameState, inout commandList: [Command]) {
+    func addPickCommandsForTile(drawCommand: DrawCommand, context: Context, frameState: FrameState, commandList: inout [Command]) {
         let pickCommand: DrawCommand
         if (_pickCommands.count <= _usedPickCommands) {
             pickCommand = DrawCommand(cull: false)

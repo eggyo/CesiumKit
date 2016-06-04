@@ -211,7 +211,7 @@ struct ShaderSource {
             .replace(root.glslSource, "")
     }
     
-    private func getDependencyNode(name: String, glslSource: String, inout nodes: [DependencyNode]) -> DependencyNode {
+    private func getDependencyNode(name: String, glslSource: String, nodes: inout [DependencyNode]) -> DependencyNode {
         
         var dependencyNode: DependencyNode?
         
@@ -234,7 +234,7 @@ struct ShaderSource {
         return dependencyNode!
     }
     
-    private func generateDependencies(currentNode: DependencyNode, inout dependencyNodes: [DependencyNode]) {
+    private func generateDependencies(currentNode: DependencyNode, dependencyNodes: inout [DependencyNode]) {
         
         if currentNode.evaluated {
             return
@@ -266,7 +266,7 @@ struct ShaderSource {
         }
     }
     
-    private func sortDependencies(inout dependencyNodes: [DependencyNode]) {
+    private func sortDependencies(dependencyNodes: inout [DependencyNode]) {
         
         var nodesWithoutIncomingEdges = [DependencyNode]()
         var allNodes = [DependencyNode]()

@@ -115,10 +115,10 @@ class HeightmapTessellator {
         
         if rectangle == nil {
             if isGeographic {
-                geographicWest = Math.toRadians(nativeRectangle.west)
-                geographicSouth = Math.toRadians(nativeRectangle.south)
-                geographicEast = Math.toRadians(nativeRectangle.east)
-                geographicNorth = Math.toRadians(nativeRectangle.north)
+                geographicWest = Math.toRadians(degrees: nativeRectangle.west)
+                geographicSouth = Math.toRadians(degrees: nativeRectangle.south)
+                geographicEast = Math.toRadians(degrees: nativeRectangle.east)
+                geographicNorth = Math.toRadians(degrees: nativeRectangle.north)
             } else {
                 geographicWest = nativeRectangle.west * oneOverGlobeSemimajorAxis
                 geographicSouth = piOverTwo - (2.0 * atan(exp(-nativeRectangle.south * oneOverGlobeSemimajorAxis)))
@@ -150,7 +150,7 @@ class HeightmapTessellator {
         var minimumHeight = 65536.0
         var maximumHeight = -65536.0
         
-        let fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter!, ellipsoid: ellipsoid)
+        let fromENU = Transforms.eastNorthUpToFixedFrame(origin: relativeToCenter!, ellipsoid: ellipsoid)
         let toENU = fromENU.inverse
         
         var minimum = Cartesian3(simd: double3(Double.infinity))
@@ -188,7 +188,7 @@ class HeightmapTessellator {
             if !isGeographic {
                 latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverGlobeSemimajorAxis)))
             } else {
-                latitude = Math.toRadians(latitude)
+                latitude = Math.toRadians(degrees: latitude)
             }
             
             let cosLatitude = cos(latitude)
@@ -211,7 +211,7 @@ class HeightmapTessellator {
                 if !isGeographic {
                     longitude = longitude * oneOverGlobeSemimajorAxis
                 } else {
-                    longitude = Math.toRadians(longitude)
+                    longitude = Math.toRadians(degrees: longitude)
                 }
                 
                 let terrainOffset = row * (width * stride) + col * stride
@@ -302,7 +302,7 @@ class HeightmapTessellator {
         var vertices = [Float]()
         
         for j in 0..<positions.count {
-            encoding.encode(&vertices, position: positions[j], uv: uvs[j], height: heights[j], normalToPack: nil)
+            encoding.encode(vertexBuffer: &vertices, position: positions[j], uv: uvs[j], height: heights[j], normalToPack: nil)
         }
         
         return (

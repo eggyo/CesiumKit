@@ -221,7 +221,7 @@ class QuadtreePrimitive {
         return object.removeFunc
     }
     
-    func beginFrame (inout frameState: FrameState) {
+    func beginFrame (frameState: inout FrameState) {
         if !frameState.passes.render {
             return
         }
@@ -243,7 +243,7 @@ class QuadtreePrimitive {
         _tileReplacementQueue.markStartOfRenderFrame()
     }
     
-    func update (inout frameState: FrameState) {
+    func update (frameState: inout FrameState) {
         if (frameState.passes.render) {
             tileProvider.beginUpdate(frameState)
             selectTilesForRendering(frameState)
@@ -258,7 +258,7 @@ class QuadtreePrimitive {
     
     private (set) var debugDisplayString: String? = nil
     
-    func endFrame (inout frameState: FrameState) {
+    func endFrame (frameState: inout FrameState) {
         if !frameState.passes.render {
             return
         }
@@ -469,7 +469,7 @@ class QuadtreePrimitive {
         _tileLoadQueue.append(tile)
     }
     
-    func processTileLoadQueue(inout frameState: FrameState) {
+    func processTileLoadQueue(frameState: inout FrameState) {
         
         if _tileLoadQueue.count == 0 {
             return
@@ -576,7 +576,7 @@ class QuadtreePrimitive {
         }*/
     }
     
-    func createRenderCommandsForSelectedTiles(inout frameState: FrameState) {
+    func createRenderCommandsForSelectedTiles(frameState: inout FrameState) {
         func tileDistanceSortFunction(a: QuadtreeTile, b: QuadtreeTile) -> Bool {
             return a.distance < b.distance
         }

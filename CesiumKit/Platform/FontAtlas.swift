@@ -29,7 +29,7 @@ private let TextureDataPathKey = "textureDataPath"
 private let TextureSizeKey = "textureSize"
 
 /// Errors thrown by FontAtlas functions.
-enum FontAtlasError: ErrorType, CustomStringConvertible {
+enum FontAtlasError: ErrorProtocol, CustomStringConvertible {
     /// Thrown when the provided JSON is invalid.
     /// - Parameter json: The provided JSON.
     /// - Parameter message: Optional error message.

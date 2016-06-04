@@ -673,7 +673,7 @@ public struct Matrix3 {
      * @param {MatrixType} other The second matrix.
      * @returns {MatrixType} The modified result parameter.
      */
-    public func multiply(other: Matrix3) -> Matrix3 {
+    public func multiply(_ other: Matrix3) -> Matrix3 {
         return Matrix3(simd: simdType * other.simdType)
     }
     
@@ -685,7 +685,7 @@ public struct Matrix3 {
         return Matrix3(simd: simdType.transpose)
     }
     
-    public func equals(other: Matrix3) -> Bool {
+    public func equals(_ other: Matrix3) -> Bool {
         return matrix_equal(simdType.cmatrix, other.simdType.cmatrix)
     }
     
@@ -699,7 +699,7 @@ public struct Matrix3 {
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      */
-    func equalsEpsilon(other: Matrix3, epsilon: Double) -> Bool {
+    func equalsEpsilon(_ other: Matrix3, epsilon: Double) -> Bool {
         return matrix_almost_equal_elements(simdType.cmatrix, other.simdType.cmatrix, epsilon)
 
     }

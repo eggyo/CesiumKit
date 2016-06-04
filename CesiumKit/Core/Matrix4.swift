@@ -707,9 +707,9 @@ Matrix4.getElementIndex = function(column, row) {
     *
     * // a.x = 12.0; a.y = 16.0; a.z = 20.0; a.w = 24.0;
     */
-    func getColumn (index: Int) -> Cartesian4 {
-        assert(index >= 0 && index <= 3, "index must be 0, 1, 2, or 3.")
-        return Cartesian4(simd: simdType[index])
+    func column (_ x: Int) -> Cartesian4 {
+        assert(x >= 0 && x <= 3, "index must be 0, 1, 2, or 3.")
+        return Cartesian4(simd: simdType[x])
         
     }
 
@@ -1243,8 +1243,8 @@ Matrix4.multiplyByScale = function(matrix, scale, result) {
      * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter.
      */
-    func multiplyByVector(cartesian: Cartesian4) -> Cartesian4 {
-        return Cartesian4(simd: self.simdType * cartesian.simdType)
+    func multiplyBy(vector: Cartesian4) -> Cartesian4 {
+        return Cartesian4(simd: self.simdType * vector.simdType)
     }
 
     /**
@@ -1281,7 +1281,7 @@ Matrix4.multiplyByScale = function(matrix, scale, result) {
      * var p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
      * Cesium.Matrix4.multiplyByPoint(matrix, p, result);
      */
-    func multiplyByPoint (cartesian: Cartesian3) -> Cartesian3 {
+    func multiplyByPoint (_ cartesian: Cartesian3) -> Cartesian3 {
         let vector = simdType * double4(cartesian.x, cartesian.y, cartesian.z, 1.0)
         return Cartesian3(x: vector.x, y: vector.y, z: vector.z)
     }

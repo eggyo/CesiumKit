@@ -793,7 +793,7 @@ public class Scene {
         return nil
     }
 
-    func clearPasses(inout passes: FrameState.Passes ) {
+    func clearPasses( passes: inout FrameState.Passes ) {
         passes.render = false
         passes.pick = false
     }

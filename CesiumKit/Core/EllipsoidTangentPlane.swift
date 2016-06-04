@@ -72,18 +72,18 @@ struct EllipsoidTangentPlane {
     
     init (origin: Cartesian3, ellipsoid: Ellipsoid = Ellipsoid.wgs84()) {
         
-        guard let origin = ellipsoid.scaleToGeodeticSurface(origin) else {
+        guard let origin = ellipsoid.scaleToGeodeticSurface(cartesian: origin) else {
             fatalError("origin must not be at the center of the ellipsoid.")
         }
         self.origin = origin
         
-        let eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid: ellipsoid)
+        let eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin: origin, ellipsoid: ellipsoid)
         self.ellipsoid = ellipsoid
 
-        xAxis = Cartesian3(cartesian4: eastNorthUp.getColumn(0))
-        yAxis = Cartesian3(cartesian4: eastNorthUp.getColumn(1))
+        xAxis = Cartesian3(cartesian4: eastNorthUp.column(0))
+        yAxis = Cartesian3(cartesian4: eastNorthUp.column(1))
         
-        let normal = Cartesian3(cartesian4: eastNorthUp.getColumn(2))
+        let normal = Cartesian3(cartesian4: eastNorthUp.column(2))
         self.plane = Plane(fromPoint: origin, normal: normal)
     }
     
@@ -194,11 +194,11 @@ struct EllipsoidTangentPlane {
         
         var ray = Ray(origin: cartesian, direction: plane.normal)
         
-        var intersectionPoint = IntersectionTests.rayPlane(ray, plane: plane)
+        var intersectionPoint = IntersectionTests.rayPlane(ray: ray, plane: plane)
         
         if intersectionPoint == nil {
             ray.direction = ray.direction.negate()
-            intersectionPoint = IntersectionTests.rayPlane(ray, plane: plane)
+            intersectionPoint = IntersectionTests.rayPlane(ray: ray, plane: plane)
         }
         assert(intersectionPoint != nil, "no intersection with plane")
         
@@ -216,7 +216,7 @@ struct EllipsoidTangentPlane {
     * @returns {Cartesian2[]} The modified result parameter or a new array of Cartesian2 instances if none was provided. This will have the same length as <code>cartesians</code>.
     */
     func projectPointsToNearestOnPlane (cartesians: [Cartesian3]) -> [Cartesian2] {
-        return cartesians.map({ projectPointToNearestOnPlane($0) })
+        return cartesians.map({ projectPointToNearestOnPlane(cartesian: $0) })
     }
     /*
     var projectPointsOntoEllipsoidScratch = new Cartesian3();

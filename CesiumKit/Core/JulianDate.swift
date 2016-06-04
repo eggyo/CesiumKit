@@ -33,7 +33,7 @@ public struct JulianDate {
      * Gets or sets the number of seconds into the current day.
      * @type {Number}
      */
-    public private (set) var secondsOfDay: Double = Double.NaN
+    public private (set) var secondsOfDay: Double = Double.nan
     
     public init (julianDayNumber: Double = 0.0, secondsOfDay: Double = 0.0, timeStandard: TimeStandard = .UTC) {
 
@@ -59,7 +59,7 @@ public struct JulianDate {
     var daysInLeapFeburary = 29;
     */
     private func compareLeapSecondDates (leapSecond: LeapSecond, dateToFind: LeapSecond) -> Int {
-        return Int(leapSecond.julianDate.compare(dateToFind.julianDate))
+        return Int(leapSecond.julianDate.compare(other: dateToFind.julianDate))
     }
     
     func convertUtcToTai() -> JulianDate {
@@ -69,7 +69,7 @@ public struct JulianDate {
         // we don't really need a leap second instance, anything with a julianDate property will do
         let binarySearchScratchLeapSecond = LeapSecond(julianDate: self, offset: 0)
         
-        var index = JulianDate._leapSeconds.binarySearch(binarySearchScratchLeapSecond, comparator: compareLeapSecondDates)
+        var index = JulianDate._leapSeconds.binarySearch(itemToFind: binarySearchScratchLeapSecond, comparator: compareLeapSecondDates)
         
         if (index < 0) {
             index = ~index
@@ -85,14 +85,14 @@ public struct JulianDate {
             //However, if the difference between the UTC date being converted and the TAI
             //defined leap second is greater than the offset, we are off by one and need to use
             //the previous leap second.
-            let difference = JulianDate._leapSeconds[index].julianDate.secondsDifference(self)
+            let difference = JulianDate._leapSeconds[index].julianDate.secondsDifference(other: self)
             if difference > offset {
                 index -= 1
                 offset = Double(JulianDate._leapSeconds[index].offset)
             }
         }
         
-        return self.addSeconds(offset)
+        return self.add(seconds: offset)
     }
 
     /*
@@ -730,7 +730,7 @@ public struct JulianDate {
     func computeTaiMinusUtc () -> Int {
         let binarySearchScratchLeapSecond = LeapSecond(julianDate: self, offset: 0)
 
-        var index = JulianDate._leapSeconds.binarySearch(binarySearchScratchLeapSecond, comparator: compareLeapSecondDates)
+        var index = JulianDate._leapSeconds.binarySearch(itemToFind: binarySearchScratchLeapSecond, comparator: compareLeapSecondDates)
         if index < 0 {
             index = ~index
             index -= 1
@@ -749,7 +749,7 @@ public struct JulianDate {
     * @param {JulianDate} result An existing instance to use for the result.
     * @returns {JulianDate} The modified result parameter.
     */
-    func addSeconds (seconds: Double) -> JulianDate {
+    func add (seconds: Double) -> JulianDate {
         return JulianDate(julianDayNumber: Double(self.dayNumber), secondsOfDay: secondsOfDay + seconds, timeStandard: .TAI)
     }
     /*
@@ -811,7 +811,7 @@ public struct JulianDate {
     * @param {JulianDate} result An existing instance to use for the result.
     * @returns {JulianDate} The modified result parameter.
     */
-    func addDays (days: Double) -> JulianDate {
+    func add (days: Double) -> JulianDate {
         return JulianDate(julianDayNumber: Double(self.dayNumber) + days, secondsOfDay: self.secondsOfDay)
     }
     
@@ -823,7 +823,7 @@ public struct JulianDate {
     * @returns {Boolean} <code>true</code> if <code>left</code> is earlier than <code>right</code>, <code>false</code> otherwise.
     */
     func lessThan (other: JulianDate) -> Bool {
-        return self.compare(other) < 0
+        return self.compare(other: other) < 0
     }
     
     /**
@@ -834,7 +834,7 @@ public struct JulianDate {
     * @returns {Boolean} <code>true</code> if <code>left</code> is earlier than or equal to <code>right</code>, <code>false</code> otherwise.
     */
     func lessThanOrEquals (other: JulianDate) -> Bool {
-        return self.compare(other) <= 0
+        return self.compare(other: other) <= 0
     }
     
     /**
@@ -845,7 +845,7 @@ public struct JulianDate {
     * @returns {Boolean} <code>true</code> if <code>left</code> is later than <code>right</code>, <code>false</code> otherwise.
     */
     func greaterThan (other: JulianDate) -> Bool {
-        return self.compare(other) > 0
+        return self.compare(other: other) > 0
     }
     
     /**
@@ -856,7 +856,7 @@ public struct JulianDate {
     * @returns {Boolean} <code>true</code> if <code>left</code> is later than or equal to <code>right</code>, <code>false</code> otherwise.
     */
     func greaterThanOrEquals (other: JulianDate) -> Bool {
-        return self.compare(other) >= 0
+        return self.compare(other: other) >= 0
     }
     /*
     /**

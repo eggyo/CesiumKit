@@ -329,7 +329,7 @@ return this._primitives[index];
 /**
 * @private
 */
-    override func update (inout frameState: FrameState) {
+    override func update (frameState: inout FrameState) {
         if !show {
             return
         }

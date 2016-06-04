@@ -137,12 +137,12 @@ enum ComponentDatatype {
     func toMTLIndexType () -> MTLIndexType {
         switch (self) {
         case .UnsignedShort:
-            return .UInt16
+            return .uInt16
         case .UnsignedInt:
-            return .UInt32
+            return .uInt32
         default:
             assertionFailure("invalid type for indices")
-            return .UInt16
+            return .uInt16
         }
     }
     

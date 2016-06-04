@@ -136,24 +136,24 @@ public class Clock {
             if startTimeUndefined && stopTimeUndefined && currentTimeUndefined {
                 currentTime = JulianDate.now()
                 startTime = currentTime!
-                stopTime = startTime!.addDays(1.0)
+                stopTime = startTime!.add(days: 1.0)
             } else if startTimeUndefined && stopTimeUndefined {
                 startTime = currentTime!
-                stopTime = currentTime?.addDays(1.0)
-                startTime = stopTime!.addDays(-1.0)
+                stopTime = currentTime?.add(days: 1.0)
+                startTime = stopTime!.add(days: -1.0)
                 currentTime = startTime!
             } else if currentTimeUndefined && stopTimeUndefined {
                 currentTime = startTime!
-                stopTime = startTime!.addDays(1.0)
+                stopTime = startTime!.add(days: 1.0)
             } else if currentTimeUndefined {
                 currentTime = startTime!
             } else if stopTimeUndefined {
-                stopTime = currentTime!.addDays(1.0)
+                stopTime = currentTime!.add(days: 1.0)
             } else if startTimeUndefined {
                 startTime = currentTime!
             }
             
-            assert(startTime!.lessThanOrEquals(stopTime!), "startTime must come before stopTime.")
+            assert(startTime!.lessThanOrEquals(other: stopTime!), "startTime must come before stopTime.")
             
             self.startTime = startTime!
             self.stopTime = stopTime!
@@ -196,22 +196,22 @@ public class Clock {
                 currentTime = JulianDate.now()
             } else {
                 if clockStep == .TickDependent {
-                    currentTime = currentTime.addSeconds(multiplier)
+                    currentTime = currentTime.add(seconds: multiplier)
                 } else {
-                    currentTime = currentTime.addSeconds(multiplier * currentSystemTime.timeIntervalSinceDate(_lastSystemTime))
+                    currentTime = currentTime.add(seconds: multiplier * currentSystemTime.timeIntervalSince(_lastSystemTime))
                 }
                 if clockRange == .Clamped {
-                    if currentTime.lessThan(startTime) {
+                    if currentTime.lessThan(other: startTime) {
                         currentTime = startTime
-                    } else if currentTime.greaterThan(stopTime) {
+                    } else if currentTime.greaterThan(other: stopTime) {
                         currentTime = stopTime
                     }
                 } else if clockRange == .LoopStop {
-                    if currentTime.lessThan(startTime) {
+                    if currentTime.lessThan(other: startTime) {
                         currentTime = startTime
                     }
-                    while currentTime.greaterThan(stopTime) {
-                        currentTime = currentTime.addSeconds(currentTime.secondsDifference(stopTime))
+                    while currentTime.greaterThan(other: stopTime) {
+                        currentTime = currentTime.add(seconds: currentTime.secondsDifference(other: stopTime))
                     }
                 }
             }

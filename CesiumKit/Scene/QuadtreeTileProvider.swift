@@ -105,7 +105,7 @@ protocol QuadtreeTileProvider {
     *
     * @param {FrameState} frameState The frame state.
     */
-    func beginUpdate (inout frameState frameState: FrameState)
+    func beginUpdate (frameState frameState: inout FrameState)
     
     /**
     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#showTileThisFrame}
@@ -115,7 +115,7 @@ protocol QuadtreeTileProvider {
     *
     * @param {FrameState} frameState The frame state.
     */
-    func endUpdate (inout frameState frameState: FrameState)
+    func endUpdate (frameState frameState: inout FrameState)
     
     /**
     * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
@@ -144,7 +144,7 @@ protocol QuadtreeTileProvider {
     *
     * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
     */
-    func loadTile (tile: QuadtreeTile, inout frameState: FrameState)
+    func loadTile (tile: QuadtreeTile, frameState: inout FrameState)
     
     /**
     * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
@@ -173,7 +173,7 @@ protocol QuadtreeTileProvider {
     * @param {Context} context The rendering context.
     * @param {FrameState} frameState The state information of the current rendering frame.
     */
-    func showTileThisFrame (tile: QuadtreeTile, inout frameState: FrameState)
+    func showTileThisFrame (tile: QuadtreeTile, frameState: inout FrameState)
     
     /**
     * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.

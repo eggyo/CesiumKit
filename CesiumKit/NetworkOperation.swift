@@ -20,10 +20,10 @@ extension NSURLSessionConfiguration {
     /// newly created session configuration object, customised
     /// from the default to your requirements.
     class func resourceSessionConfiguration() -> NSURLSessionConfiguration {
-        let config = defaultSessionConfiguration()
+        let config = self.default()
         // Eg we think 60s is too long a timeout time.
         config.timeoutIntervalForRequest = 20
-        config.HTTPMaximumConnectionsPerHost = 2
+        config.httpMaximumConnectionsPerHost = 2
         return config
     }
 }
@@ -51,14 +51,14 @@ private let ResponseDelegateKey = "responseDelegateObject"
 class NetworkOperation: NSOperation {
     
     private var _privateFinished: Bool = false
-    override var finished: Bool {
+    override var isFinished: Bool {
         get {
             return _privateFinished
         }
         set (newAnswer) {
-            willChangeValueForKey("isFinished")
+            willChangeValue(forKey: "isFinished")
             _privateFinished = newAnswer
-            didChangeValueForKey("isFinished")
+            didChangeValue(forKey: "isFinished")
         }
     }
     
@@ -91,8 +91,8 @@ class NetworkOperation: NSOperation {
     }
     
     override func start () {
-        if cancelled {
-            finished = true
+        if isCancelled {
+            isFinished = true
             return
         }
         let session = NSURLSession.resourceSharedSession
@@ -100,21 +100,21 @@ class NetworkOperation: NSOperation {
         let completeURL: NSURL
         if let parameters = parameters {
             guard let urlComponents = NSURLComponents(string: self.url) else {
-                finished = true
+                isFinished = true
                 //setError
                 return
             }
-            urlComponents.percentEncodedQuery = encodeParameters(parameters)
-            completeURL = urlComponents.URL ?? NSURL(string: self.url)!
+            urlComponents.percentEncodedQuery = encodeParameters(parameters: parameters)
+            completeURL = urlComponents.url ?? NSURL(string: self.url)!
         } else {
             completeURL = NSURL(string: self.url)!
         }
         
-        let request = NSMutableURLRequest(URL: completeURL)
+        let request = NSMutableURLRequest(url: completeURL)
         
         _ = headers?.map { request.setValue($1, forHTTPHeaderField: $0) }
         
-        let dataTask = session.dataTaskWithRequest(request)
+        let dataTask = session.dataTask(with: request)
         dataTask.networkOperation = self
         //NSURLProtocol.setProperty(self, forKey: ResponseDelegateKey, inRequest: request)
         
@@ -122,7 +122,7 @@ class NetworkOperation: NSOperation {
     }
     
     private func encodeParameters (parameters: [String: String]) -> String {
-        return (parameters.map { "\($0)=\($1)" }).joinWithSeparator("&")
+        return (parameters.map { "\($0)=\($1)" }).joined(separator: "&")
     }
 }
 
@@ -162,7 +162,7 @@ class ResourceSessionDelegate: NSObject, NSURLSessionDataDelegate {
     }*/
     
     func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Void) {
-        completionHandler(.PerformDefaultHandling, nil)
+        completionHandler(.performDefaultHandling, nil)
     }
     
     func URLSession(session: NSURLSession, didBecomeInvalidWithError error: NSError?) {
@@ -175,8 +175,8 @@ class ResourceSessionDelegate: NSObject, NSURLSessionDataDelegate {
         //guard let operation = NSURLProtocol.propertyForKey(ResponseDelegateKey, inRequest: request) as? NetworkOperation else {
             return
         }
-        if operation.cancelled {
-            operation.finished = true
+        if operation.isCancelled {
+            operation.isFinished = true
             dataTask.cancel()
             return
         }
@@ -194,8 +194,8 @@ class ResourceSessionDelegate: NSObject, NSURLSessionDataDelegate {
             }
         }
         //As the data may be discontiguous, you should use [NSData enumerateByteRangesUsingBlock:] to access it.
-        data.enumerateByteRangesUsingBlock { pointer, range, stop in
-            operation._incomingData!.appendBytes(pointer, length: range.length)
+        data.enumerateBytes { pointer, range, stop in
+            operation._incomingData!.append(pointer, length: range.length)
         }
     }
     
@@ -207,6 +207,6 @@ class ResourceSessionDelegate: NSObject, NSURLSessionDataDelegate {
         }
         task.networkOperation = nil
         operation.error = error
-        operation.finished = true
+        operation.isFinished = true
     }
 }

@@ -217,8 +217,8 @@ class DrawCommand: Command {
     * @param {RenderState} [renderState] The render state that will override the render state of the command.
     * @param {RenderPipeline} [renderPipeline] The render pipeline that will override the shader program of the command.
     */
-    func execute(context: Context, renderPass: RenderPass, frustumUniformBuffer: Buffer? = nil) {
-        context.draw(self, renderPass: renderPass, frustumUniformBuffer: frustumUniformBuffer)
+    func execute(in context: Context, renderPass: RenderPass, frustumUniformBuffer: Buffer? = nil) {
+        context.draw(command: self, renderPass: renderPass, frustumUniformBuffer: frustumUniformBuffer)
     }
     
     deinit {

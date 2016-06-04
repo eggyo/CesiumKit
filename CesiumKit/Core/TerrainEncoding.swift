@@ -103,7 +103,7 @@ struct TerrainEncoding {
         let center = axisAlignedBoundingBox.center
         var toENU = fromENU.inverse
         
-        toENU = Matrix4(translation: minimum.negate()).multiply(toENU)
+        toENU = Matrix4(translation: minimum.negate()).multiply(other: toENU)
         
         let scale = Cartesian3(
             x: 1.0 / dimensions.x,
@@ -112,7 +112,7 @@ struct TerrainEncoding {
         )
         toENU = Matrix4(scale: scale).multiply(toENU)
         
-        var matrix = fromENU.setTranslation(Cartesian3.zero)
+        var matrix = fromENU.setTranslation(translation: Cartesian3.zero)
         
         var fromENU = fromENU
         
@@ -179,7 +179,7 @@ struct TerrainEncoding {
         }
     }
 
-    func encode (inout vertexBuffer: [Float], position: Cartesian3, uv: Cartesian2, height: Double, normalToPack: Cartesian2? = nil) {
+    func encode (vertexBuffer: inout [Float], position: Cartesian3, uv: Cartesian2, height: Double, normalToPack: Cartesian2? = nil) {
         let u = uv.x
         let v = uv.y
         
@@ -191,7 +191,7 @@ struct TerrainEncoding {
             position.z = Math.clamp(position.z, min: 0.0, max: 1.0)
             
             let hDim = maximumHeight - minimumHeight
-            let h = Math.clamp((height - minimumHeight) / hDim, min: 0.0, max: 1.0)
+            let h = Math.clamp(value: (height - minimumHeight) / hDim, min: 0.0, max: 1.0)
             
             let compressed0 = AttributeCompression.compressTextureCoordinates(Cartesian2(x: position.x, y: position.y))
             

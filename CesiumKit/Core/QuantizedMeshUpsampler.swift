@@ -269,12 +269,12 @@ class QuantizedMeshUpsampler {
     }
     
     private class func addClippedPolygon (
-        inout uBuffer uBuffer: [Int],
-        inout vBuffer: [Int],
-        inout heightBuffer: [Double],
-        inout normalBuffer: [UInt8],
-        inout indices: [Int],
-        inout vertexMap: [String: Int],
+        uBuffer uBuffer: inout [Int],
+        vBuffer: inout [Int],
+        heightBuffer: inout [Double],
+        normalBuffer: inout [UInt8],
+        indices: inout [Int],
+        vertexMap: inout [String: Int],
         clipped: [Double],
         triangleVertices: [Vertex],
         hasVertexNormals: Bool)

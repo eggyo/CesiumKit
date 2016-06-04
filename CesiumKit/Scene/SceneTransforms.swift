@@ -67,14 +67,14 @@ struct SceneTransforms {
     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     */
     static func wgs84ToWindowCoordinates (scene: Scene, position: Cartesian3) -> Cartesian2? {
-        return SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(scene, position: position, eyeOffset: Cartesian3.zero)
+        return SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(scene: scene, position: position, eyeOffset: Cartesian3.zero)
     }
     
     
     private static func worldToClip(position: Cartesian3, eyeOffset: Cartesian3, camera: Camera) -> Cartesian4 {
         let viewMatrix = camera.viewMatrix
         
-        var positionEC = viewMatrix.multiplyByVector(Cartesian4(x: position.x, y: position.y, z: position.z, w: 1.0))
+        var positionEC = viewMatrix.multiply(vector: Cartesian4(x: position.x, y: position.y, z: position.z, w: 1.0))
         
         let zEyeOffset = eyeOffset.multiplyComponents(Cartesian3(cartesian4: positionEC.normalize()))
         positionEC.x += eyeOffset.x + zEyeOffset.x
@@ -87,7 +87,7 @@ struct SceneTransforms {
     static func wgs84WithEyeOffsetToWindowCoordinates (scene: Scene, position: Cartesian3, eyeOffset: Cartesian3) -> Cartesian2? {
         // Transform for 3D, 2D, or Columbus view
         let frameState = scene.frameState
-        guard let actualPosition = SceneTransforms.computeActualWgs84Position(frameState, position: position) else {
+        guard let actualPosition = SceneTransforms.computeActualWgs84Position(frameState: frameState, position: position) else {
             return nil
         }
         // Assuming viewport takes up the entire canvas...
@@ -106,12 +106,12 @@ struct SceneTransforms {
         if frameState.mode == .Scene2D {
             let projection = scene.mapProjection
             let maxCartographic = Cartographic(longitude: M_PI, latitude: M_PI_2)
-            let maxCoord = projection.project(maxCartographic)
+            let maxCoord = projection.project(cartographic: maxCartographic)
             
             let cameraPosition = camera.position
             let frustum = camera.frustum
             
-            let viewportTransformation = Matrix4.computeViewportTransformation(viewport, nearDepthRange: 0.0, farDepthRange: 1.0)
+            let viewportTransformation = Matrix4.computeViewportTransformation(viewport: viewport, nearDepthRange: 0.0, farDepthRange: 1.0)
             let projectionMatrix = camera.frustum.projectionMatrix
             
             let x = camera.positionWC.y
@@ -126,8 +126,8 @@ struct SceneTransforms {
                     
                     camera.frustum.right = maxCoord.x - x
                     
-                    positionCC = worldToClip(actualPosition, eyeOffset: eyeOffset, camera: camera)
-                    let windowCoord0 = SceneTransforms.clipToGLWindowCoordinates(viewport, position: positionCC)
+                    positionCC = worldToClip(position: actualPosition, eyeOffset: eyeOffset, camera: camera)
+                    let windowCoord0 = SceneTransforms.clipToGLWindowCoordinates(viewport: viewport, position: positionCC)
                     
                     viewport.x += windowCoordinates.x
                     
@@ -137,16 +137,16 @@ struct SceneTransforms {
                     camera.frustum.right = -camera.frustum.left
                     camera.frustum.left = -right
                     
-                    positionCC = worldToClip(actualPosition, eyeOffset: eyeOffset, camera: camera)
-                    windowCoord1 = SceneTransforms.clipToGLWindowCoordinates(viewport, position: positionCC)
+                    positionCC = worldToClip(position: actualPosition, eyeOffset: eyeOffset, camera: camera)
+                    windowCoord1 = SceneTransforms.clipToGLWindowCoordinates(viewport: viewport, position: positionCC)
                 } else {
                     viewport.x += windowCoordinates.x
                     viewport.width -= windowCoordinates.x
                     
                     camera.frustum.left = -maxCoord.x - x
                     
-                    positionCC = worldToClip(actualPosition, eyeOffset: eyeOffset, camera: camera)
-                    windowCoord0 = SceneTransforms.clipToGLWindowCoordinates(viewport, position: positionCC)
+                    positionCC = worldToClip(position: actualPosition, eyeOffset: eyeOffset, camera: camera)
+                    windowCoord0 = SceneTransforms.clipToGLWindowCoordinates(viewport: viewport, position: positionCC)
                     
                     viewport.x -= viewport.width
                     camera.position.x = -camera.position.x
@@ -154,8 +154,8 @@ struct SceneTransforms {
                     camera.frustum.left = -camera.frustum.right
                     camera.frustum.right = -left
                     
-                    positionCC = worldToClip(actualPosition, eyeOffset: eyeOffset, camera: camera)
-                    windowCoord1 = SceneTransforms.clipToGLWindowCoordinates(viewport, position: positionCC)
+                    positionCC = worldToClip(position: actualPosition, eyeOffset: eyeOffset, camera: camera)
+                    windowCoord1 = SceneTransforms.clipToGLWindowCoordinates(viewport: viewport, position: positionCC)
                 }
                 
                 camera.position = cameraPosition
@@ -169,12 +169,12 @@ struct SceneTransforms {
         }
         if frameState.mode != SceneMode.Scene3D || cameraCentered {
             // View-projection matrix to transform from world coordinates to clip coordinates
-            positionCC = worldToClip(actualPosition, eyeOffset: eyeOffset, camera: camera)
+            positionCC = worldToClip(position: actualPosition, eyeOffset: eyeOffset, camera: camera)
             if positionCC.z < 0 && frameState.mode != .Scene2D {
                 return nil
             }
             
-            result = SceneTransforms.clipToGLWindowCoordinates(viewport, position: positionCC)
+            result = SceneTransforms.clipToGLWindowCoordinates(viewport: viewport, position: positionCC)
         }
         
         result.y = sceneHeight - result.y
@@ -222,11 +222,11 @@ struct SceneTransforms {
         }
         
         let projection = frameState.mapProjection
-        guard let cartographic = projection.ellipsoid.cartesianToCartographic(position) else {
+        guard let cartographic = projection.ellipsoid.cartesianToCartographic(cartesian: position) else {
             return nil
         }
         
-        let projectedPosition = projection.project(cartographic)
+        let projectedPosition = projection.project(cartographic: cartographic)
         
         if mode == .ColumbusView {
             return Cartesian3(x: projectedPosition.z, y: projectedPosition.x, z: projectedPosition.y)
@@ -256,10 +256,10 @@ struct SceneTransforms {
     private static func clipToGLWindowCoordinates (viewport: Cartesian4, position: Cartesian4) -> Cartesian2 {
         
         // Perspective divide to transform from clip coordinates to normalized device coordinates
-        let positionNDC = position.divideByScalar(position.w)
+        let positionNDC = position.divide(scalar: position.w)
         
         // Viewport transform to transform from clip coordinates to window coordinates
-        let viewportTransform = Matrix4.computeViewportTransformation(viewport)
+        let viewportTransform = Matrix4.computeViewportTransformation(viewport: viewport)
         
         let positionWC = viewportTransform.multiplyByPoint(Cartesian3(cartesian4: positionNDC))
         

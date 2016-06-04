@@ -107,7 +107,7 @@ class Fog {
         return tableLastIndex
     }
     
-    func update (inout frameState: FrameState) {
+    func update (frameState: inout FrameState) {
         frameState.fog.enabled = enabled
         if !enabled {
             return

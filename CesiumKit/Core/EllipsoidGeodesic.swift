@@ -355,27 +355,27 @@ class EllipsoidGeodesic {
     }
     
     private struct EllipsoidGeodesicConstants {
-        var a = Double.NaN
-        var b = Double.NaN
-        var f = Double.NaN
-        var cosineHeading = Double.NaN
-        var sineHeading = Double.NaN
-        var tanU = Double.NaN
-        var cosineU = Double.NaN
-        var sineU = Double.NaN
-        var sigma = Double.NaN
-        var sineAlpha = Double.NaN
-        var sineSquaredAlpha = Double.NaN
-        var cosineSquaredAlpha = Double.NaN
-        var cosineAlpha = Double.NaN
-        var u2Over4 = Double.NaN
-        var u4Over16 = Double.NaN
-        var u6Over64 = Double.NaN
-        var u8Over256 = Double.NaN
-        var a0 = Double.NaN
-        var a1 = Double.NaN
-        var a2 = Double.NaN
-        var a3 = Double.NaN
-        var distanceRatio = Double.NaN
+        var a = Double.nan
+        var b = Double.nan
+        var f = Double.nan
+        var cosineHeading = Double.nan
+        var sineHeading = Double.nan
+        var tanU = Double.nan
+        var cosineU = Double.nan
+        var sineU = Double.nan
+        var sigma = Double.nan
+        var sineAlpha = Double.nan
+        var sineSquaredAlpha = Double.nan
+        var cosineSquaredAlpha = Double.nan
+        var cosineAlpha = Double.nan
+        var u2Over4 = Double.nan
+        var u4Over16 = Double.nan
+        var u6Over64 = Double.nan
+        var u8Over256 = Double.nan
+        var a0 = Double.nan
+        var a1 = Double.nan
+        var a2 = Double.nan
+        var a3 = Double.nan
+        var distanceRatio = Double.nan
     }
 }

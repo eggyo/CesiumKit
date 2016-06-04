@@ -374,7 +374,7 @@ class CesiumTerrainProvider: TerrainProvider {
         )
         pos += cartesian3Length
         
-        let minimumHeight = Double(data.getFloat32(pos))
+        let minimumHeight = Double(data.getFloat32(pos: pos))
         pos += strideof(Float)
         let maximumHeight = Double(data.getFloat32(pos))
         pos += strideof(Float)

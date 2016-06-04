@@ -186,11 +186,11 @@ public struct Math {
     * @param {Number} value The value to return the sign of.
     * @returns {Number} The sign of value.
     */
-    static func sign (value: Double) -> Int {
-        if value > 0.0 {
+    static func sign (_ x: Double) -> Int {
+        if x > 0.0 {
             return 1
         }
-        if value < 0.0 {
+        if x < 0.0 {
             return -1
         }
         return 0
@@ -214,7 +214,7 @@ public struct Math {
      *
      * @see CesiumMath.fromSNorm
      */
-    static func toSNorm (value: Double) -> UInt8 {
+    static func toSNorm (_ value: Double) -> UInt8 {
         return UInt8(round((Math.clamp(value, min: -1.0, max: 1.0) * 0.5 + 0.5) * 255.0))
     }
     
@@ -225,7 +225,7 @@ public struct Math {
      *
      * @see CesiumMath.toSNorm
      */
-    static func fromSNorm (value: UInt8) -> Double {
+    static func fromSNorm (_ value: UInt8) -> Double {
         return Math.clamp(Double(value), min: 0.0, max: 255.0) / 255.0 * 2.0 - 1.0
     }
 
@@ -453,7 +453,7 @@ CesiumMath.convertLongitudeRange = function(angle) {
     * @param {Number} angle in radians
     * @returns {Number} The angle in the range [<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>].
     */
-    static func negativePiToPi (x: Double) -> Double {
+    static func negativePiToPi (_ x: Double) -> Double {
         return Math.zeroToTwoPi(x + M_PI) - M_PI
     }
 
@@ -463,7 +463,7 @@ CesiumMath.convertLongitudeRange = function(angle) {
     * @param {Number} angle in radians
     * @returns {Number} The angle in the range [0, <code>CesiumMath.TWO_PI</code>].
     */
-    static func zeroToTwoPi (x: Double) -> Double {
+    static func zeroToTwoPi (_ x: Double) -> Double {
         let mod = Math.mod(x, Math.TwoPi)
         if (abs(mod) < Math.Epsilon14 && abs(x) > Math.Epsilon14) {
             return Math.TwoPi
@@ -500,7 +500,7 @@ CesiumMath.convertLongitudeRange = function(angle) {
 * var c = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
 * var d = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
 */
-    static func equalsEpsilon(left: Double, _ right: Double, relativeEpsilon: Double, absoluteEpsilon: Double? = nil) -> Bool {
+    static func equalsEpsilon(_ left: Double, _ right: Double, relativeEpsilon: Double, absoluteEpsilon: Double? = nil) -> Bool {
         let epsilon = absoluteEpsilon ?? relativeEpsilon
         let absDiff = abs(left - right)
         return absDiff <= epsilon || absDiff <= relativeEpsilon * max(abs(left), abs(right))
@@ -553,7 +553,7 @@ CesiumMath.factorial = function(n) {
 * var n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
 * var n = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
 */
-    static func incrementWrap (n: Int, maximumValue: Int, minimumValue: Int) -> Int {
+    static func incrementWrap (_ n: Int, maximumValue: Int, minimumValue: Int) -> Int {
         
         var result = n
         assert(maximumValue > minimumValue, "maximumValue must be greater than minimumValue")
@@ -619,7 +619,7 @@ CesiumMath.nextPowerOfTwo = function(n) {
     * @param {Number} max The maximum value.
     * @returns {Number} The value clamped so that min <= value <= max.
     */
-    static public func clamp (value: Double, min: Double, max: Double) -> Double {
+    static public func clamp (_ value: Double, min: Double, max: Double) -> Double {
         return value < min ? min : value > max ? max : value
     }
 /*

@@ -168,7 +168,7 @@ public class TextRenderer: Primitive {
         _command.owner = self
     }
     
-    override func update (inout frameState: FrameState) {
+    override func update (frameState: inout FrameState) {
        
         let context = frameState.context
 

@@ -146,7 +146,7 @@ public struct Cartesian4: Equatable {
     * @param {Cartesian4} result The object into which to store the result.
     * @returns {Cartesian4} A cartesian with the minimum components.
     */
-    public func minimumByComponent(other: Cartesian4) -> Cartesian4 {
+    public func minimumByComponent(_ other: Cartesian4) -> Cartesian4 {
         return Cartesian4(simd: vector_min(simdType, other.simdType))
     }
     
@@ -158,7 +158,7 @@ public struct Cartesian4: Equatable {
     * @param {Cartesian4} result The object into which to store the result.
     * @returns {Cartesian4} A cartesian with the maximum components.
     */
-    public func maximumByComponent(other: Cartesian4) -> Cartesian4 {
+    public func maximumByComponent(_ other: Cartesian4) -> Cartesian4 {
         return Cartesian4(simd: vector_max(simdType, other.simdType))
     }
     
@@ -447,7 +447,7 @@ extension Cartesian4: Packable {
     
     init(array: [Double], startingIndex: Int = 0) {
         self.init()
-        assert(checkPackedArrayLength(array, startingIndex: startingIndex), "Invalid packed array length")
+        assert(checkPackedArrayLength(array: array, startingIndex: startingIndex), "Invalid packed array length")
         self.x = array[startingIndex]
         self.y = array[startingIndex+1]
         self.z = array[startingIndex+2]
