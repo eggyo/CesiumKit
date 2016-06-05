@@ -116,8 +116,6 @@ class NetworkOperation: NSOperation {
         
         let dataTask = session.dataTask(with: request)
         dataTask.networkOperation = self
-        //NSURLProtocol.setProperty(self, forKey: ResponseDelegateKey, inRequest: request)
-        
         dataTask.resume()
     }
     
@@ -149,30 +147,29 @@ class ResourceSessionDelegate: NSObject, NSURLSessionDataDelegate {
         guard let request = dataTask.originalRequest else {
             return
         }
-        guard let operation = NSURLProtocol.propertyForKey(ResponseDelegateKey, inRequest: request) as? NetworkOperation else {
+        guard let operation = dataTask.networkOperation else {
             return
         }
-        if operation.cancelled {
-            completionHandler(.Cancel)
-            operation.finished = true
+        if operation.isCancelled {
+            completionHandler(.cancel)
+            operation.isFinished = true
             return
         }
         //Check the response code and react appropriately
-        completionHandler(.Allow)
+        completionHandler(.allow)
     }*/
     
-    func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Void) {
+    /*func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Void) {
         completionHandler(.performDefaultHandling, nil)
     }
     
     func URLSession(session: NSURLSession, didBecomeInvalidWithError error: NSError?) {
         print("invalid")
-    }
+    }*/
     
     func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveData data: NSData) {
         
         guard let operation = dataTask.networkOperation else {
-        //guard let operation = NSURLProtocol.propertyForKey(ResponseDelegateKey, inRequest: request) as? NetworkOperation else {
             return
         }
         if operation.isCancelled {
@@ -202,7 +199,6 @@ class ResourceSessionDelegate: NSObject, NSURLSessionDataDelegate {
     func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
 
         guard let operation = task.networkOperation else {
-        //guard let operation = NSURLProtocol.propertyForKey(ResponseDelegateKey, inRequest: request) as? NetworkOperation else {
             return
         }
         task.networkOperation = nil

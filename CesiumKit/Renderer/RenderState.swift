@@ -25,13 +25,6 @@ import Metal
 * @exception {DeveloperError} renderState.depthRange.near must be greater than or equal to zero.
 * @exception {DeveloperError} renderState.depthRange.far must be less than or equal to zero.
 * @exception {DeveloperError} Invalid renderState.depthTest.func.
-* @exception {DeveloperError} renderState.blending.color components must be greater than or equal to zero and less than or equal to one
-* @exception {DeveloperError} Invalid renderState.blending.equationRgb.
-* @exception {DeveloperError} Invalid renderState.blending.equationAlpha.
-* @exception {DeveloperError} Invalid renderState.blending.functionSourceRgb.
-* @exception {DeveloperError} Invalid renderState.blending.functionSourceAlpha.
-* @exception {DeveloperError} Invalid renderState.blending.functionDestinationRgb.
-* @exception {DeveloperError} Invalid renderState.blending.functionDestinationAlpha.
 * @exception {DeveloperError} Invalid renderState.stencilTest.frontFunction.
 * @exception {DeveloperError} Invalid renderState.stencilTest.backFunction.
 * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.fail.
@@ -435,11 +428,12 @@ struct RenderState/*: Printable*/ {
             glScissor(GLint(rectangle.x), GLint(rectangle.y), GLsizei(rectangle.width), GLsizei(rectangle.height))
         }
     }
-    
-    func applyDepthRange() {
-        glDepthRangef(GLclampf(depthRange.near), GLclampf(depthRange.far))
-    }
     */
+    func applyDepthRange(encoder: MTLRenderCommandEncoder) {
+        encoder.setDepthClipMode(.clamp)
+        //glDepthRangef(GLclampf(depthRange.near), GLclampf(depthRange.far))
+    }
+    
     func applyDepthTest(encoder: MTLRenderCommandEncoder) {
         
         if depthTest.enabled {
@@ -532,14 +526,13 @@ struct RenderState/*: Printable*/ {
         applyWindingOrder(encoder: encoder)
         applyCullFace(encoder: encoder)
         /*applyLineWidth()
-        applyPolygonOffset()
-        applyDepthRange()*/
+        applyPolygonOffset()*/
+        applyDepthRange(encoder: encoder)
         applyDepthTest(encoder: encoder)
         /*applyDepthMask()
         applyStencilMask()
         applySampleCoverage()
         applyScissorTest(passState)
-        applyBlending(passState)
         applyStencilTest()*/
         applyViewport(encoder: encoder, passState: passState)
         applyWireFrame(encoder: encoder)
@@ -585,16 +578,7 @@ func : renderState.depthTest.func
 },
 depthMask : renderState.depthMask,
 stencilMask : renderState.stencilMask,
-blending : {
-enabled : renderState.blending.enabled,
-color : Color.clone(renderState.blending.color),
-equationRgb : renderState.blending.equationRgb,
-equationAlpha : renderState.blending.equationAlpha,
-functionSourceRgb : renderState.blending.functionSourceRgb,
-functionSourceAlpha : renderState.blending.functionSourceAlpha,
-functionDestinationRgb : renderState.blending.functionDestinationRgb,
-functionDestinationAlpha : renderState.blending.functionDestinationAlpha
-},
+
 stencilTest : {
 enabled : renderState.stencilTest.enabled,
 frontFunction : renderState.stencilTest.frontFunction,
